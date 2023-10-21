@@ -9,7 +9,7 @@ This repository contains a Docker image of Heimdall running on Alpine Linux, mak
 You can download the Heimdall image on Alpine from Docker Hub using the following command:
 
 ```bash
-docker pull ynrg13/heimdall-alpine:latest
+docker pull ynrg13/heimdall_v.2.5.6
 ```
 
 ## Using the Image
