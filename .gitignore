@@ -1,0 +1,27 @@
+# Ignore sensitive configuration files in all folders and subfolders
+**/*.yml
+**/*.json
+**/.env
+
+# Ignore sensitive data in all folders and subfolders
+**/data/
+
+# Ignore system or IDE-generated files in all folders and subfolders
+**/.idea/
+**/.vscode/
+
+# Ignore log and cache files in all folders and subfolders
+**/logs/
+**/.cache/
+
+# Ignore backup files in all folders and subfolders
+**/*.bak
+**/*.backup
+
+# Ignore password and token files in all folders and subfolders
+**/*.key
+**/*.pem
+**/*.cer
+
+# Ignore error log files in all folders and subfolders
+**/error.log
