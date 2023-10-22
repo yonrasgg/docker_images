@@ -1,0 +1,5 @@
+#!/bin/sh
+
+cd /Heimdall-2.5.6
+
+php -S 0.0.0.0:80 -t public/
