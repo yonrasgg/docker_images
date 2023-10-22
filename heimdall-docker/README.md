@@ -9,7 +9,7 @@ This repository contains a Docker image of Heimdall running on Alpine Linux, mak
 You can download the Heimdall image on Alpine from Docker Hub using the following command:
 
 ```bash
-docker pull ynrg13/heimdall-alpine:latest
+docker pull ynrg13/heimdall_v.2.5.6
 ```
 
 ## Using the Image
@@ -53,3 +53,5 @@ Contributions and improvements are welcome! If you have any suggestions or encou
 ## License
 
 This project is licensed under the MIT License. See the [LICENSE](https://github.com/yonrasgg/docker_images/blob/main/LICENSE) file for more details.
+
+### [Docker Repo](https://hub.docker.com/repository/docker/ynrg13/heimdall_v.2.5.6/general)
