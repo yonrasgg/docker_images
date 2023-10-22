@@ -53,5 +53,3 @@ Contributions and improvements are welcome! If you have any suggestions or encou
 This project is licensed under the MIT License. See the [LICENSE](https://github.com/yonrasgg/docker_images/blob/main/LICENSE) file for more details.
 
 ### [Docker Repo](https://hub.docker.com/repository/docker/ynrg13/iptables-alpine/general)
-
-In this README, users are guided on how to download your iptables image from Docker Hub, run it on their machines (including Raspberry Pi), and how to customize iptables rules using a custom script. Similar to the Heimdall README, it also includes sections for contributions, licensing, and a link to the Docker repository.
