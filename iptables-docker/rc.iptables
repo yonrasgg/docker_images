@@ -1,0 +1,52 @@
+#!/bin/sh
+
+# Insert connection-tracking modules
+# (not needed if built into the kernel)
+modprobe nf_conntrack
+modprobe xt_LOG
+
+# Enable broadcast echo Protection
+echo 1 > /proc/sys/net/ipv4/icmp_echo_ignore_broadcasts
+
+# Disable Source Routed Packets
+echo 0 > /proc/sys/net/ipv4/conf/all/accept_source_route
+echo 0 > /proc/sys/net/ipv4/conf/default/accept_source_route
+
+# Enable TCP SYN Cookie Protection
+echo 1 > /proc/sys/net/ipv4/tcp_syncookies
+
+# Disable ICMP Redirect Acceptance
+echo 0 > /proc/sys/net/ipv4/conf/default/accept_redirects
+
+# Do not send Redirect Messages
+echo 0 > /proc/sys/net/ipv4/conf/all/send_redirects
+echo 0 > /proc/sys/net/ipv4/conf/default/send_redirects
+
+# Set a known state
+iptables -P INPUT   DROP
+iptables -P FORWARD DROP
+iptables -P OUTPUT  DROP
+
+# Allow local-only connections
+iptables -A INPUT  -i lo -j ACCEPT
+
+# Free output on any interface to any ip for any service
+# (equal to -P ACCEPT)
+iptables -A OUTPUT -j ACCEPT
+
+# Permit answers on already established connections
+# and permit new connections related to established ones
+# (e.g. port mode ftp)
+iptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+
+# Allow HTTP and HTTPS traffic to and from NGINX server at 10.0.0.2
+iptables -A INPUT -p tcp -d 10.0.0.2 --dport 80 -j ACCEPT
+iptables -A INPUT -p tcp -d 10.0.0.2 --dport 443 -j ACCEPT
+iptables -A OUTPUT -p tcp -s 10.0.0.2 --sport 80 -j ACCEPT
+iptables -A OUTPUT -p tcp -s 10.0.0.2 --sport 443 -j ACCEPT
+
+# Add additional rules for other services and devices as per the IP configuration table.
+# Repeat the pattern of allowing specific ports for each service.
+
+# Log everything else.
+iptables -A INPUT -j LOG --log-prefix "FIREWALL:INPUT "
