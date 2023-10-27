@@ -1,61 +1,42 @@
-# Usar una imagen base de Alpine por su tamaño pequeño
-FROM alpine:latest as builder
+FROM ubuntu:latest
 
-# Instalar las dependencias necesarias
-RUN apk add --no-cache \
-    git \
-    g++ \
-    autoconf \
-    automake \
-    build-base \
-    curl \
-    libcurl \
-    pcre2-dev \
-    libxml2-dev \
-    libxslt-dev \
-    linux-headers \
-    geoip-dev \
-    libtool \
-    lmdb-dev \
-    yajl-dev \
-    zlib-dev
+RUN apt-get update && \
+    apt-get install -y curl gnupg2 ca-certificates lsb-release ubuntu-keyring apt-utils autoconf automake build-essential git libcurl4-openssl-dev libgeoip-dev liblmdb-dev libpcre++-dev libtool libxml2-dev libyajl-dev pkgconf wget zlib1g-dev
 
-# Descargar y compilar el código fuente de ModSecurity
-WORKDIR /opt
-RUN git clone https://github.com/SpiderLabs/ModSecurity
-WORKDIR /opt/ModSecurity
-RUN git submodule init && \
+RUN curl https://nginx.org/keys/nginx_signing.key | gpg --dearmor | tee /usr/share/keyrings/nginx-archive-keyring.gpg >/dev/null
+RUN echo "deb [signed-by=/usr/share/keyrings/nginx-archive-keyring.gpg] http://nginx.org/packages/ubuntu `lsb_release -cs` nginx" | tee /etc/apt/sources.list.d/nginx.list
+RUN printf "Package: *\nPin: origin nginx.org\nPin: release o=nginx\nPin-Priority: 900\n" > /etc/apt/preferences.d/99nginx
+RUN apt-get update && apt-get install -y nginx
+
+RUN git clone --depth 1 -b v3/master --single-branch https://github.com/SpiderLabs/ModSecurity /opt/ModSecurity && \
+    cd /opt/ModSecurity && \
+    git submodule init && \
     git submodule update && \
-    sh build.sh && \
-    ./configure --with-pcre2 && \
+    ./build.sh && \
+    ./configure && \
     make && \
     make install
 
-# Descargar el conector NGINX para ModSecurity y compilarlo como un módulo dinámico
-WORKDIR /opt
-RUN git clone --depth 1 https://github.com/SpiderLabs/ModSecurity-nginx.git
-WORKDIR /opt/nginx
-RUN wget http://nginx.org/download/nginx-1.21.5.tar.gz && \
-    tar zxvf nginx-1.21.5.tar.gz
-WORKDIR /opt/nginx/nginx-1.21.5
-RUN ./configure --with-compat --add-dynamic-module=/opt/ModSecurity-nginx || (cat config.log && exit 1)
-RUN make modules
+RUN git clone --depth 1 https://github.com/SpiderLabs/ModSecurity-nginx.git /opt/ModSecurity-nginx && \
+    wget http://nginx.org/download/nginx-1.13.1.tar.gz -O /tmp/nginx-1.13.1.tar.gz && \
+    tar zxvf /tmp/nginx-1.13.1.tar.gz -C /opt/ && \
+    cd /opt/nginx-1.13.1 && \
+    ./configure --with-compat --add-dynamic-module=/opt/ModSecurity-nginx && \
+    make modules && \
+    cp objs/ngx_http_modsecurity_module.so /etc/nginx/modules/
 
-# Crear una nueva imagen basada en NGINX 1.21.5
-FROM nginx:1.21.5
+# Download and unpack the headers-more-nginx-module
+RUN git clone https://github.com/openresty/headers-more-nginx-module.git /opt/headers-more-nginx-module
 
-# Copiar el módulo dinámico compilado y las configuraciones de ModSecurity
-COPY --from=builder /opt/nginx/nginx-1.21.5/objs/ngx_http_modsecurity_module.so /etc/nginx/modules/
-COPY --from=builder /opt/ModSecurity/modsecurity.conf-recommended /etc/nginx/modsec/modsecurity.conf
-COPY --from=builder /opt/ModSecurity/unicode.mapping /etc/nginx/modsec/
+# Build and install nginx with the headers-more-nginx-module
+RUN wget 'http://nginx.org/download/nginx-1.17.8.tar.gz' -O /tmp/nginx-1.17.8.tar.gz && \
+    tar -xzvf /tmp/nginx-1.17.8.tar.gz -C /opt/ && \
+    cd /opt/nginx-1.17.8/ && \
+    ./configure --prefix=/opt/nginx \
+    --add-module=/opt/headers-more-nginx-module && \
+    make && \
+    make install
 
-# Habilitar y configurar ModSecurity
-RUN sed -i 's/SecRuleEngine DetectionOnly/SecRuleEngine On/' /etc/nginx/modsec/modsecurity.conf
-RUN echo -e 'load_module modules/ngx_http_modsecurity_module.so;\n' | cat - /etc/nginx/nginx.conf > temp && mv temp /etc/nginx/nginx.conf
-RUN echo -e '\nmodsecurity on;\nmodsecurity_rules_file /etc/nginx/modsec/modsecurity.conf;\n' >> /etc/nginx/nginx.conf
-
-# Exponer los puertos 80 y 443
 EXPOSE 80 443
 
-# Ejecutar NGINX en primer plano
 CMD ["nginx", "-g", "daemon off;"]
