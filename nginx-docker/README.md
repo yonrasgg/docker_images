@@ -1,12 +1,15 @@
-# Nginx + ModSecurity docker image
+# Nginx + ModSecurity Docker Image
 
-This repository provides a Docker image incorporating Nginx and ModSecurity on an Ubuntu base. It's designed to offer a robust web application firewall (WAF) to safeguard your web applications against common threats and vulnerabilities.
+This repository houses a Docker image that amalgamates Nginx and ModSecurity on an Ubuntu base, aimed at delivering a robust Web Application Firewall (WAF) to shield your web applications from common threats and vulnerabilities.
 
-The Nginx service is built from the official [Nginx Docker image](https://hub.docker.com/_/nginx/). During the build time, the Nginx source is downloaded due to the compilation of modules. ModSecurity is set via [Compiling and Installing ModSecurity for Open Source NGINX](https://www.nginx.com/blog/compiling-and-installing-modsecurity-for-open-source-nginx/). The OWASP ModSecurity Core Rule Set is set during build time from [OWASP ModSecurity CRS GitHub](https://github.com/SpiderLabs/owasp-modsecurity-crs/). Additionally, the [Headers More Nginx module](https://github.com/openresty/headers-more-nginx-module) is also set, and the Server header is cleaned from the response.
+- **Nginx** is configured using the official [Nginx Docker image](https://hub.docker.com/_/nginx/). During the build, Nginx source is fetched for module compilation.
+- **ModSecurity** configuration follows the guide on [Compiling and Installing ModSecurity for Open Source NGINX](https://www.nginx.com/blog/compiling-and-installing-modsecurity-for-open-source-nginx/).
+- The **OWASP ModSecurity Core Rule Set (CRS)** is sourced during build from [OWASP ModSecurity CRS GitHub](https://github.com/SpiderLabs/owasp-modsecurity-crs/).
+- Additionally, the [Headers More Nginx module](https://github.com/openresty/headers-more-nginx-module) is installed, and the Server header is sanitized from the response.
 
 ## Image Build
 
-You can build the Nginx + ModSecurity image with the following command:
+Build the Nginx + ModSecurity image using the command below:
 
 ```bash
 docker build -t nginx-modsecurity .
@@ -16,17 +19,17 @@ docker build -t nginx-modsecurity .
 
 ### Basic Execution
 
-Execute Nginx with ModSecurity in a Docker container using this command:
+Launch Nginx with ModSecurity in a Docker container:
 
 ```bash
 docker run -d --name nginx-modsec nginx-modsecurity
 ```
 
-This will run Nginx with ModSecurity in the background.
+This command runs Nginx with ModSecurity in the background.
 
 ### Customization
 
-Customize Nginx and ModSecurity configurations by mounting your own configuration files when launching the container. For instance, to specify custom Nginx and ModSecurity configuration files:
+Mount your custom configuration files when launching the container for custom Nginx and ModSecurity configurations:
 
 ```bash
 docker run -d --name nginx-modsec \
@@ -35,7 +38,7 @@ docker run -d --name nginx-modsec \
 nginx-modsecurity
 ```
 
-Ensure you mount necessary directories or files for custom configurations, like SSL certificates, ModSecurity rules, and log directories:
+For more comprehensive custom configurations like SSL certificates, ModSecurity rules, and log directories, use:
 
 ```bash
 docker run -d --name nginx-modsec \
@@ -46,37 +49,62 @@ docker run -d --name nginx-modsec \
 nginx-modsecurity
 ```
 
-## Contributions
+## Setting up `libmodsecurity` in your Docker container
 
-Contributions and enhancements are warmly welcomed! For suggestions or issues, please create an issue or pull request in this repository.
+Post image pull, ensure `libmodsecurity` is correctly configured within your Docker container by following these steps:
 
-## License
+1. **Create a Docker Volume for `libmodsecurity`**:
+   ```bash
+   docker volume create libmodsecurity
+   ```
 
-This project is licensed under the MIT License. See the [LICENSE](https://github.com/your-repo/docker_images/blob/main/LICENSE) file for more details.
+2. **Copy `libmodsecurity.so.3` to the Docker Volume**:
+   ```bash
+   sudo cp /path/to/your/libmodsecurity.so.3 /var/lib/docker/volumes/libmodsecurity/_data/
+   ```
 
-### [Docker Repo](https://github.com/yonrasgg/docker_images/blob/49fdb953ec2321a81841c05cb21c96402156c617/nginx-docker/README.md)
+3. **Update Docker Run Command**:
+   ```bash
+   docker run -d -v libmodsecurity:/usr/local/modsecurity/lib --name nginx-modsec nginx-modsecurity
+   ```
 
-Inspired by official Nginx images and ModSecurity, this image integrates the powerful Nginx web server with the robust protection of ModSecurity. The setup adheres to best practices ensuring optimal performance and security.
+4. **Restart the Container**:
+   ```bash
+   docker restart nginx-modsec
+   ```
 
----
+5. **Verify the Configuration**:
+   ```bash
+   docker exec -it nginx-modsec nginx -t
+   ```
+
+6. **Inspect the NGINX Logs**:
+   ```bash
+   docker exec -it nginx-modsec cat /var/log/nginx/error.log
+   ```
+
+7. **Test the Setup**:
+   ```bash
+   curl http://localhost:80
+   ```
 
 ## Example Use Cases and Commands
 
 ### Auditing and Testing
 
-Before deploying, it's crucial to audit ModSecurity to ensure no false positives. Run the container in audit mode to log HTTP traffic without blocking any requests.
+Audit ModSecurity for false positives before deployment. Run the container in audit mode to log HTTP traffic without blocking requests:
 
 ```bash
 docker run -d --name nginx-modsec -e MODSEC_AUDIT_LOG=/var/log/modsec_audit.log nginx-modsecurity
 ```
 
-Tail the audit log with:
+Tail the audit log:
 
 ```bash
 docker exec -it nginx-modsec tail -f /var/log/modsec_audit.log
 ```
 
-Trigger a security rule using curl to examine the behavior:
+Trigger a security rule using curl:
 
 ```bash
 curl -I 'http://localhost/?param="><script>alert(1);</script>'
@@ -84,7 +112,7 @@ curl -I 'http://localhost/?param="><script>alert(1);</script>'
 
 ### Enabling ModSecurity
 
-After auditing, enable ModSecurity by updating the `modsecurity.conf` file and restarting the container.
+Post auditing, enable ModSecurity by updating the `modsecurity.conf` file and restarting the container:
 
 ```bash
 docker exec -it nginx-modsec sed -i 's/SecRuleEngine DetectionOnly/SecRuleEngine On/' /etc/modsecurity.d/modsecurity.conf
@@ -93,7 +121,7 @@ docker restart nginx-modsec
 
 ### Blocking Specific Attacks
 
-Create custom rules to block particular attacks. For instance, to block requests with a specific User-Agent:
+Create custom rules to block particular attacks. For example, to block requests with a specific User-Agent:
 
 ```bash
 echo 'SecRule REQUEST_HEADERS:User-Agent "BadBot" "id:1234,deny,status:403"' > custom_rules.conf
@@ -101,6 +129,14 @@ docker cp custom_rules.conf nginx-modsec:/etc/modsecurity.d/
 docker restart nginx-modsec
 ```
 
-Now, requests from `BadBot` will be blocked.
+## Contributions
 
-These examples illustrate how to utilize and customize the Nginx + ModSecurity image to effectively protect your web applications.
+We welcome contributions and enhancements. For suggestions or issues, create an issue or pull request in this repository.
+
+## License
+
+This project is under the MIT License. View the [LICENSE](https://github.com/your-repo/docker_images/blob/main/LICENSE) file for more details.
+
+### [Docker Repo](https://github.com/yonrasgg/docker_images/blob/49fdb953ec2321a81841c05cb21c96402156c617/nginx-docker/README.md)
+
+Inspired by the official Nginx images and ModSecurity, this image melds the powerful Nginx web server with the robust protection of ModSecurity, adhering to best practices for optimal performance and security.
