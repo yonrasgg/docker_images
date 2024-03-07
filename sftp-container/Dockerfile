@@ -3,6 +3,7 @@ FROM ubuntu:16.04
 RUN apt-get update && apt-get install -y openssh-server
 
 # configure sftp user
+ARG PASSWORD_SFTP
 RUN useradd -rm -d /home/admin -s /bin/bash -G sudo -u 10001 admin 
 RUN echo "admin:${PASSWORD_SFTP}" | chpasswd 
 
