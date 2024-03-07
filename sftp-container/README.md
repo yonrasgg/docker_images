@@ -1,59 +1,57 @@
 # SFTP Docker Image
 
-This Dockerfile is used to create a Docker image for an SFTP server based on the latest version of Alpine Linux.
+This Docker image facilitates the deployment of a Secure FTP (SFTP) server using Ubuntu 16.04, streamlining the process of setting up and managing an SFTP server within a Dockerized environment.
 
-## Base Image
+## Table of Contents
 
-The base image for this Docker image is the latest version of Alpine Linux.
+- [Prerequisites](#prerequisites)
+- [Building the Docker Image](#building-the-docker-image)
+- [Running the Docker Container](#running-the-docker-container)
+- [Connecting to the SFTP Server](#connecting-to-the-sftp-server)
+- [Customizing the Docker Image](#customizing-the-docker-image)
+- [Contributing](#contributing)
+- [License](#license)
 
-## Installation
+## Prerequisites
 
-The following packages are installed on the Alpine Linux image:
-- OpenSSH
-- Bash
-- Shadow (for password management)
+Ensure Docker is installed and properly configured on your system prior to utilizing this Docker image. Refer to the [official Docker documentation](https://docs.docker.com/get-docker/) for installation guidelines.
 
-SSH keys are generated for the server.
+## Building the Docker Image
 
-## User Configuration
+Execute the following steps to construct the Docker image:
 
-A new user named `admin_user` is created with the following settings:
-- Home directory: `/home/admin_user`
-- Shell: `/bin/sh`
-- Primary group: `wheel`
-- User ID: `10001`
+1. **Clone the Repository**: Obtain a copy of the source repository by cloning it to your local machine.
 
-The password for `admin_user` is set to `SFTPUSERPASSWORDHERE`.
+2. **Navigate to the Project Directory**: Change your directory to the one containing the Dockerfile.
 
-## Directory Setup
+3. **Build the Image**: Construct the Docker image using the command below. Substitute `your_password` with the desired password for the SFTP user account.
 
-The following directories are created:
-- `/var/run/sshd` for the SSH daemon to run
-- `/var/sftp/uploads` for SFTP file uploads
+    ```bash
+    docker build --build-arg PASSWORD_SFTP=your_password -t sftp-server .
+    ```
 
-Permissions and ownership are set accordingly.
+## Running the Docker Container
 
-## SSH Server Configuration
+Deploy the Docker container with the command provided below:
 
-The SSH server is configured with the following settings:
-- Keep sessions alive by sending a message to the client every 60 seconds
-- Allow a maximum of 120 missed messages before disconnecting the session
-- Only allow SFTP for the `admin_user` user
-- Disable SSH tunneling, agent forwarding, TCP forwarding, and X11 forwarding
+```bash
+docker run -d -p 22:22 sftp-server
+```
 
-## Network Port
+This operation initiates the Docker container in detached mode (`-d`), correlating port 22 on the container to port 22 on the host system.
 
-The container listens on port 22, the default port for SSH.
+## Connecting to the SFTP Server
 
-## Container Startup
+To establish a connection with the SFTP server, utilize an SFTP client targeting `sftp://localhost`. Use the username `admin` and the password designated during the image building process.
 
-The SSH daemon is started when the container starts. The `-D` option is used to run SSHD in the foreground and prevent the container from exiting.
+## Customizing the Docker Image
 
-## Usage
+Modifications to the Docker image can be made by adjusting the Dockerfile. Potential customizations include altering the base image, incorporating additional software packages, introducing further user accounts, or amending the SFTP server's configuration parameters.
 
-To use this Docker image, follow these steps:
-1. Build the image using the provided Dockerfile.
-2. Run a container based on the built image.
-3. Connect to the SFTP server using an SFTP client.
+## Contributing
 
-Please refer to the Docker documentation for more information on building and running Docker images.
+Your contributions are highly appreciated! For enhancements or modifications, please initiate a pull request.
+
+## License
+
+This project is distributed under the MIT License. For more information, please refer to the LICENSE file included in the repository.
