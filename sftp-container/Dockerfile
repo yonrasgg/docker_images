@@ -1,37 +1,36 @@
-FROM alpine:latest
+FROM ubuntu:16.04
 
-# Install OpenSSH
-RUN apk add --no-cache openssh bash shadow && \
-    ssh-keygen -A
+RUN apt-get update && apt-get install -y openssh-server
 
-# Configure sftp user
-RUN useradd -rm -d /home/admin_user -s /bin/sh -G wheel -u 10001 admin_user && \
-    echo "admin_user:SFTPUSERPASSWORDHERE" | chpasswd
+# configure sftp user
+RUN useradd -rm -d /home/admin -s /bin/bash -G sudo -u 10001 admin 
+RUN echo "admin:${PASSWORD_SFTP}" | chpasswd 
 
-# Necessary SSHD file
-RUN mkdir -p /var/run/sshd
+# necessary sshd file
+RUN mkdir /var/run/sshd
 
-# SSH login fix to keep session alive
-RUN echo "ClientAliveInterval 60" >> /etc/ssh/sshd_config && \
-    echo "ClientAliveCountMax 120" >> /etc/ssh/sshd_config
+# SSH login fix (Keeping Session Alive). If not, user will be kick off after ssh
+RUN sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/sshd
 
-# Setup directory for SFTP
-RUN mkdir -p /var/sftp/uploads && \
-    chown root:root /var/sftp && \
-    chmod 755 /var/sftp && \
-    chown admin_user:admin_user /var/sftp/uploads
-
-# Update to only allow sftp and not ssh tunneling
-RUN echo -e "\n\
-Match User admin_user\n\
-ForceCommand internal-sftp\n\
-PasswordAuthentication yes\n\
-ChrootDirectory /var/sftp\n\
-PermitTunnel no\n\
-AllowAgentForwarding no\n\
-AllowTcpForwarding no\n\
-X11Forwarding no" >> /etc/ssh/sshd_config
+ENV NOTVISIBLE "in users profile"
+RUN echo "export VISIBLE=now" >> /etc/profile
 
 EXPOSE 22
-
 CMD ["/usr/sbin/sshd", "-D"]
+
+#setup directory for sftp
+RUN mkdir -p /var/sftp/uploads
+RUN chown root:root /var/sftp
+RUN chmod 755 /var/sftp
+RUN chown admin:admin /var/sftp/uploads
+
+# update to only allow sftp and not ssh tunneling to limit the non-necessary activity 
+RUN echo '\n\
+Match User admin  \n\
+ForceCommand internal-sftp \n\ 
+PasswordAuthentication yes \n\ 
+ChrootDirectory /var/sftp \n\ 
+PermitTunnel no  \n\ 
+AllowAgentForwarding no \n\ 
+AllowTcpForwarding no \n\ 
+X11Forwarding no ' >> /etc/ssh/sshd_config 
