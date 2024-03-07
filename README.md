@@ -7,6 +7,7 @@ Welcome to the Docker Images Repository. This repository serves as a collection 
 - [Heimdall](https://github.com/yonrasgg/docker_images/tree/main/heimdall-docker)
 - [iptables](https://github.com/yonrasgg/docker_images/tree/main/iptables-docker)
 - [nginx](https://github.com/yonrasgg/docker_images/blob/49fdb953ec2321a81841c05cb21c96402156c617/nginx-docker)
+- [Wireguard](https://github.com/yonrasgg/docker_images/blob/0a2588e5fd46f66bf1a9fcc62a7d8428149b37eb/wireguard-docker/Dockerfile)
 
 ### Description
 
