@@ -88,7 +88,7 @@ jobs:
 
       # --- Final safety scan before publish (belt-and-suspenders) ---
       - name: Build image for final scan
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
         with:
           context: ${{ matrix.image.context }}
           file: ${{ matrix.image.dockerfile }}
@@ -99,7 +99,7 @@ jobs:
           cache-from: type=gha,scope=${{ matrix.image.name }}
 
       - name: "Trivy: final pre-publish scan"
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # v0.35.0
         with:
           image-ref: ${{ env.IMAGE_PREFIX }}/${{ matrix.image.name }}:preflight
           format: 'sarif'
@@ -108,7 +108,7 @@ jobs:
           exit-code: '1'
 
       - name: Upload Trivy scan results
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@5c8a8a642e79153f5d047b10ec1cba1d1cc65699 # v3.35.1
         if: always()
         with:
           sarif_file: 'trivy-${{ matrix.image.name }}.sarif'
@@ -117,7 +117,7 @@ jobs:
       # --- Build and push multi-arch image ---
       - name: Build and push image
         id: push
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
         with:
           context: ${{ matrix.image.context }}
           file: ${{ matrix.image.dockerfile }}
