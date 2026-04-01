@@ -153,7 +153,7 @@ jobs:
       # --- Generate and attach SBOM attestation ---
       - name: Generate SBOM with Syft
         if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
-        uses: anchore/sbom-action@e11c554f704a0b820cbf8c51673f6945e0731532 # v0.20.0
+        uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0.24.0
         with:
           image: ${{ env.IMAGE_PREFIX }}/${{ matrix.image.name }}@${{ steps.push.outputs.digest }}
           output-file: sbom-${{ matrix.image.name }}.spdx.json
