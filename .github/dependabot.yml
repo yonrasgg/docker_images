@@ -1,0 +1,53 @@
+version: 2
+updates:
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "ci"
+
+  # Docker base images
+  - package-ecosystem: "docker"
+    directory: "/sonarr"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "docker(sonarr)"
+
+  - package-ecosystem: "docker"
+    directory: "/radarr"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "docker(radarr)"
+
+  - package-ecosystem: "docker"
+    directory: "/sabnzbd"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "docker(sabnzbd)"
+
+  - package-ecosystem: "docker"
+    directory: "/jackett"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "docker(jackett)"
+
+  - package-ecosystem: "docker"
+    directory: "/plex"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "docker(plex)"
+
+  # Python dependencies (SABnzbd)
+  - package-ecosystem: "pip"
+    directory: "/sabnzbd"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "deps(sabnzbd)"

@@ -1,0 +1,82 @@
+# =============================================================================
+# Hardened SABnzbd Docker Image
+# Multi-stage, non-root, minimal attack surface
+# https://github.com/yonrasgg/docker_images
+# =============================================================================
+
+ARG PYTHON_IMAGE=python:3.12-slim-bookworm
+ARG BASE_IMAGE=debian:bookworm-slim
+
+# --- Stage 1: Download and prepare ---
+FROM ${PYTHON_IMAGE} AS builder
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends curl ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
+
+# Download latest SABnzbd release
+RUN set -eux; \
+    SABNZBD_VERSION=$(curl -sL https://api.github.com/repos/sabnzbd/sabnzbd/releases/latest | \
+      grep '"tag_name"' | sed 's/.*"tag_name": *"//;s/".*//'); \
+    echo "Downloading SABnzbd ${SABNZBD_VERSION}"; \
+    curl -fsSL -o /tmp/sabnzbd.tar.gz \
+      "https://github.com/sabnzbd/sabnzbd/releases/download/${SABNZBD_VERSION}/SABnzbd-${SABNZBD_VERSION}-src.tar.gz"; \
+    mkdir -p /opt/sabnzbd; \
+    tar -xzf /tmp/sabnzbd.tar.gz -C /opt/sabnzbd --strip-components=1; \
+    rm -f /tmp/sabnzbd.tar.gz
+
+# Install Python dependencies
+RUN pip install --no-cache-dir --prefix=/install \
+      -r /opt/sabnzbd/requirements.txt
+
+# --- Stage 2: Runtime ---
+FROM ${PYTHON_IMAGE}
+
+LABEL maintainer="yonrasgg" \
+      org.opencontainers.image.title="Hardened SABnzbd" \
+      org.opencontainers.image.description="Security-hardened SABnzbd Usenet downloader" \
+      org.opencontainers.image.url="https://github.com/yonrasgg/docker_images" \
+      org.opencontainers.image.source="https://github.com/yonrasgg/docker_images/tree/main/sabnzbd" \
+      org.opencontainers.image.licenses="MIT" \
+      org.opencontainers.image.vendor="yonrasgg"
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+      ca-certificates \
+      curl \
+      gosu \
+      par2 \
+      p7zip-full \
+      tini \
+      tzdata \
+      unrar-free && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+# Apply hardening
+COPY shared/hardening.sh /tmp/hardening.sh
+RUN chmod +x /tmp/hardening.sh && /tmp/hardening.sh && rm /tmp/hardening.sh
+
+# Create non-root user
+RUN groupadd -g 1000 media && \
+    useradd -u 1000 -g media -d /config -s /usr/sbin/nologin media
+
+# Copy Python packages and application
+COPY --from=builder /install /usr/local
+COPY --from=builder /opt/sabnzbd /opt/sabnzbd
+
+RUN mkdir -p /config /downloads /incomplete-downloads && \
+    chown -R media:media /opt/sabnzbd /config /downloads /incomplete-downloads
+
+COPY sabnzbd/entrypoint.sh /entrypoint.sh
+RUN chmod 755 /entrypoint.sh
+
+EXPOSE 8080
+
+VOLUME ["/config", "/downloads", "/incomplete-downloads"]
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+  CMD curl -fsS http://localhost:8080/api?mode=version || exit 1
+
+ENTRYPOINT ["tini", "--", "/entrypoint.sh"]
+CMD ["python3", "/opt/sabnzbd/SABnzbd.py", "--server", "0.0.0.0:8080", "--config-file", "/config", "--browser", "0"]

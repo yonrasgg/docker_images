@@ -1,0 +1,177 @@
+# =============================================================================
+# Build, Scan, Sign, and Push Hardened Docker Images
+# Supply chain security: Cosign signatures, SBOM (Syft), SLSA provenance
+# Triggered on push to main, PRs, and weekly schedule
+# =============================================================================
+
+name: Build and Push Images
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'sonarr/**'
+      - 'radarr/**'
+      - 'sabnzbd/**'
+      - 'jackett/**'
+      - 'plex/**'
+      - 'shared/**'
+      - '.github/workflows/build-push.yml'
+  pull_request:
+    branches: [main]
+  schedule:
+    # Rebuild weekly to pick up base image security patches
+    - cron: '0 4 * * 1'
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_PREFIX: ghcr.io/${{ github.repository_owner }}
+
+permissions:
+  contents: read
+  packages: write
+  security-events: write
+  id-token: write          # Required for Cosign keyless signing (OIDC)
+  attestations: write      # Required for GitHub artifact attestations
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        image:
+          - name: sonarr
+            context: .
+            dockerfile: sonarr/Dockerfile
+          - name: radarr
+            context: .
+            dockerfile: radarr/Dockerfile
+          - name: sabnzbd
+            context: .
+            dockerfile: sabnzbd/Dockerfile
+          - name: jackett
+            context: .
+            dockerfile: jackett/Dockerfile
+          - name: plex
+            context: .
+            dockerfile: plex/Dockerfile
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Set up QEMU (multi-arch)
+        uses: docker/setup-qemu-action@29109295f81e9208d7d86ff1c6c12d2833863392 # v3.6.0
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@b5ca514318bd6ebac0fb2aedd5d36ec1b5c232a2 # v3.10.0
+
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@3454372f43399081ed03b604cb2d021dabca52bb # v3.8.2
+
+      - name: Log in to GitHub Container Registry
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3.4.0
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Generate image metadata
+        id: meta
+        uses: docker/metadata-action@902fa8ec7d6ecbf8d84d538b9b233a880e428804 # v5.7.0
+        with:
+          images: ${{ env.IMAGE_PREFIX }}/${{ matrix.image.name }}
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value={{date 'YYYY.MM.DD'}},enable={{is_default_branch}}
+            type=sha,prefix=,format=short
+            type=ref,event=pr
+
+      # --- Build (scan target) ---
+      - name: Build image for scanning
+        uses: docker/build-push-action@263435318d21b8e681c14492fe198571cfb76f00 # v6.18.0
+        with:
+          context: ${{ matrix.image.context }}
+          file: ${{ matrix.image.dockerfile }}
+          platforms: linux/amd64
+          push: false
+          load: true
+          tags: ${{ env.IMAGE_PREFIX }}/${{ matrix.image.name }}:scan
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # --- Vulnerability Scanning ---
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@76071ef20d3b4b6e423f6358700a6aefe9742621 # v0.31.0
+        with:
+          image-ref: ${{ env.IMAGE_PREFIX }}/${{ matrix.image.name }}:scan
+          format: 'sarif'
+          output: 'trivy-${{ matrix.image.name }}.sarif'
+          severity: 'CRITICAL,HIGH'
+          exit-code: '1'
+
+      - name: Upload Trivy scan results
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-${{ matrix.image.name }}.sarif'
+          category: 'trivy-${{ matrix.image.name }}'
+
+      # --- Push multi-arch image (main branch only) ---
+      - name: Build and push image
+        id: push
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        uses: docker/build-push-action@263435318d21b8e681c14492fe198571cfb76f00 # v6.18.0
+        with:
+          context: ${{ matrix.image.context }}
+          file: ${{ matrix.image.dockerfile }}
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          sbom: true
+          provenance: mode=max
+
+      # --- Cosign Keyless Signing (OIDC / Sigstore) ---
+      - name: Sign image with Cosign
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        env:
+          DIGEST: ${{ steps.push.outputs.digest }}
+          TAGS: ${{ steps.meta.outputs.tags }}
+        run: |
+          images=""
+          for tag in ${TAGS}; do
+            images+="${tag}@${DIGEST} "
+          done
+          cosign sign --yes ${images}
+
+      # --- Generate and attach SBOM attestation ---
+      - name: Generate SBOM with Syft
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        uses: anchore/sbom-action@e11c554f704a0b820cbf8c51673f6945e0731532 # v0.20.0
+        with:
+          image: ${{ env.IMAGE_PREFIX }}/${{ matrix.image.name }}@${{ steps.push.outputs.digest }}
+          output-file: sbom-${{ matrix.image.name }}.spdx.json
+          format: spdx-json
+
+      - name: Attest SBOM with Cosign
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        run: |
+          cosign attest --yes \
+            --predicate sbom-${{ matrix.image.name }}.spdx.json \
+            --type spdxjson \
+            ${{ env.IMAGE_PREFIX }}/${{ matrix.image.name }}@${{ steps.push.outputs.digest }}
+
+      # --- Upload SBOM as build artifact ---
+      - name: Upload SBOM artifact
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: sbom-${{ matrix.image.name }}
+          path: sbom-${{ matrix.image.name }}.spdx.json
+          retention-days: 90

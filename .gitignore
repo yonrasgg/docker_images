@@ -1,27 +1,114 @@
-# Ignore sensitive configuration files in all folders and subfolders
-**/*.yml
-**/*.json
-**/.env
+# =============================================================================
+# .gitignore — Hardened Docker Images Repository (Public)
+# Prevent secrets, credentials, and sensitive data from reaching the remote
+# =============================================================================
 
-# Ignore sensitive data in all folders and subfolders
-**/data/
-
-# Ignore system or IDE-generated files in all folders and subfolders
-**/.idea/
-**/.vscode/
-
-# Ignore log and cache files in all folders and subfolders
-**/logs/
-**/.cache/
-
-# Ignore backup files in all folders and subfolders
-**/*.bak
-**/*.backup
-
-# Ignore password and token files in all folders and subfolders
+# ---- Secrets & Credentials ----
+.env
+.env.*
+.env.local
+.env.production
 **/*.key
 **/*.pem
 **/*.cer
+**/*.crt
+**/*.p12
+**/*.pfx
+**/*.jks
+**/*.keystore
+**/*.pub
+**/id_rsa
+**/id_ed25519
+**/.ssh/
+**/secrets/
+**/credentials/
+**/private/
 
-# Ignore error log files in all folders and subfolders
-**/error.log
+# Cosign keys (keyless signing is used in CI, but just in case)
+cosign.key
+cosign.pub
+*.sig
+
+# Docker config with registry auth tokens
+**/.docker/config.json
+
+# Cloud provider credentials
+**/.aws/
+**/.azure/
+**/.gcp/
+**/.kube/
+**/kubeconfig*
+**/serviceaccount*.json
+**/*credentials*.json
+**/*token*.json
+
+# GPG keys
+**/*.gpg
+**/*.asc
+**/gnupg/
+
+# Password files
+**/*.password
+**/*.passwd
+**/htpasswd
+**/.htpasswd
+
+# ---- Runtime Data & Configuration (generated at runtime) ----
+**/data/
+**/logs/
+**/*.log
+**/config.xml
+**/sabnzbd.ini
+**/Preferences.xml
+**/*.db
+**/*.db-shm
+**/*.db-wal
+**/*.sqlite
+**/*.sqlite3
+
+# ---- Docker Build Artifacts ----
+**/*.tar
+**/*.tar.gz
+**/*.tar.bz2
+**/*.tar.xz
+**/*.deb
+**/*.rpm
+
+# SBOM files generated locally
+sbom-*.json
+sbom-*.spdx
+**/trivy-*.sarif
+
+# ---- IDE & Editor ----
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+*.sublime-project
+*.sublime-workspace
+.project
+.classpath
+.settings/
+
+# ---- OS Artifacts ----
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# ---- Backups ----
+**/*.bak
+**/*.backup
+**/*.orig
+**/*.tmp
+
+# ---- Cache & Temp ----
+**/.cache/
+**/tmp/
+**/__pycache__/
+**/*.pyc
+**/node_modules/

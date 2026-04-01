@@ -1,0 +1,48 @@
+# =============================================================================
+# .dockerignore — Global (repo root context)
+# Prevents leaking sensitive data and reduces build context size
+# =============================================================================
+
+# Git
+.git
+.gitignore
+.github
+
+# Documentation
+README.md
+CONTRIBUTING.md
+SECURITY.md
+LICENSE
+*.md
+
+# Environment and secrets
+.env
+.env.*
+**/*.key
+**/*.pem
+**/*.cer
+**/*.p12
+
+# Runtime data / logs
+**/data/
+**/logs/
+**/*.log
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS artifacts
+.DS_Store
+Thumbs.db
+
+# Legacy images (deprecated, not part of media stack builds)
+_legacy/
+
+# Build caches
+**/__pycache__/
+**/*.pyc
+**/*.tar
+**/*.tar.gz

@@ -1,0 +1,17 @@
+# =============================================================================
+# CODEOWNERS — Require review for security-sensitive changes
+# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+# =============================================================================
+
+# Default owner for all files
+*                           @yonrasgg
+
+# CI/CD and supply chain configuration require explicit review
+.github/                    @yonrasgg
+.dockerignore               @yonrasgg
+
+# Shared hardening script affects all images
+shared/                     @yonrasgg
+
+# Security policy
+SECURITY.md                 @yonrasgg
