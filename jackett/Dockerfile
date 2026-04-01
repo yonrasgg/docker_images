@@ -11,6 +11,8 @@ FROM ${BASE_IMAGE} AS downloader
 
 ARG TARGETARCH
 
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
 RUN apt-get update && \
     apt-get install -y --no-install-recommends curl ca-certificates && \
     rm -rf /var/lib/apt/lists/*
@@ -31,6 +33,8 @@ RUN set -eux; \
 # --- Stage 2: Runtime ---
 FROM ${BASE_IMAGE}
 
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
 LABEL maintainer="yonrasgg" \
       org.opencontainers.image.title="Hardened Jackett" \
       org.opencontainers.image.description="Security-hardened Jackett indexer proxy" \
@@ -48,7 +52,6 @@ RUN apt-get update && \
       libssl3 \
       tini \
       tzdata && \
-    apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 COPY shared/hardening.sh /tmp/hardening.sh

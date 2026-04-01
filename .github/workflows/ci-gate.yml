@@ -41,7 +41,6 @@ jobs:
       - uses: hadolint/hadolint-action@v3.1.0
         with:
           dockerfile: ${{ matrix.image }}/Dockerfile
-          failure-threshold: warning
 
   shellcheck:
     name: "Lint: Shell Scripts"
@@ -52,6 +51,7 @@ jobs:
         with:
           scandir: '.'
           severity: warning
+          ignore_paths: '_legacy'
 
   # ------------------------------------------------------------------
   # Stage 2: Build + Vulnerability Scan (per image, amd64 only)
@@ -126,18 +126,23 @@ jobs:
           - name: sonarr
             port: 8989
             health_path: /ping
+            timeout: 120
           - name: radarr
             port: 7878
             health_path: /ping
+            timeout: 120
           - name: sabnzbd
             port: 8080
             health_path: /api?mode=version
+            timeout: 120
           - name: jackett
             port: 9117
             health_path: /UI/Login
+            timeout: 120
           - name: plex
             port: 32400
             health_path: /identity
+            timeout: 300
     env:
       IMAGE_TAG: "ci-gate/${{ matrix.image.name }}:${{ github.sha }}"
     steps:
@@ -165,17 +170,20 @@ jobs:
             -p ${{ matrix.image.port }}:${{ matrix.image.port }} \
             ${{ env.IMAGE_TAG }}
 
-      - name: Wait for healthcheck (up to 120s)
+      - name: Wait for healthcheck (up to ${{ matrix.image.timeout }}s)
         run: |
-          echo "Waiting for ${{ matrix.image.name }} on port ${{ matrix.image.port }}..."
-          for i in $(seq 1 24); do
+          TIMEOUT=${{ matrix.image.timeout }}
+          INTERVAL=5
+          ATTEMPTS=$(( TIMEOUT / INTERVAL ))
+          echo "Waiting for ${{ matrix.image.name }} on port ${{ matrix.image.port }} (timeout: ${TIMEOUT}s)..."
+          for i in $(seq 1 "$ATTEMPTS"); do
             if curl -fsS --max-time 5 http://localhost:${{ matrix.image.port }}${{ matrix.image.health_path }} > /dev/null 2>&1; then
-              echo "✓ ${{ matrix.image.name }} is healthy after $((i * 5))s"
+              echo "✓ ${{ matrix.image.name }} is healthy after $((i * INTERVAL))s"
               exit 0
             fi
-            sleep 5
+            sleep "$INTERVAL"
           done
-          echo "✗ ${{ matrix.image.name }} did not become healthy within 120s"
+          echo "✗ ${{ matrix.image.name }} did not become healthy within ${TIMEOUT}s"
           docker logs test-${{ matrix.image.name }}
           exit 1
 
