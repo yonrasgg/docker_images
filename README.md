@@ -1,7 +1,8 @@
 # Hardened Docker Images
 
-[![Build and Push](https://github.com/yonrasgg/docker_images/actions/workflows/build-push.yml/badge.svg)](https://github.com/yonrasgg/docker_images/actions/workflows/build-push.yml)
-[![Security Scan](https://github.com/yonrasgg/docker_images/actions/workflows/security-scan.yml/badge.svg)](https://github.com/yonrasgg/docker_images/actions/workflows/security-scan.yml)
+[![CI Gate](https://github.com/yonrasgg/docker_images/actions/workflows/ci-gate.yml/badge.svg?branch=hardening)](https://github.com/yonrasgg/docker_images/actions/workflows/ci-gate.yml)
+[![Publish](https://github.com/yonrasgg/docker_images/actions/workflows/build-push.yml/badge.svg)](https://github.com/yonrasgg/docker_images/actions/workflows/build-push.yml)
+[![Nightly Scan](https://github.com/yonrasgg/docker_images/actions/workflows/security-scan.yml/badge.svg)](https://github.com/yonrasgg/docker_images/actions/workflows/security-scan.yml)
 [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/yonrasgg/docker_images/badge)](https://securityscorecards.dev/viewer/?uri=github.com/yonrasgg/docker_images)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
@@ -117,34 +118,49 @@ For the full media stack with TLS, VPN access, and nftables firewall, see the [H
 
 ## CI/CD Pipeline
 
+Images reach `ghcr.io` only after passing every gate. Development happens on the `hardening` branch; `main` is the release branch.
+
 ```
-Push to main ──► Hadolint + ShellCheck ──► Build (amd64 + arm64)
-                                            │
-                                            ├──► Trivy scan (gate: 0 CRITICAL/HIGH)
-                                            │
-                                            ├──► Push to ghcr.io
-                                            │
-                                            ├──► Cosign keyless sign (OIDC)
-                                            │
-                                            ├──► Syft SBOM generation + attestation
-                                            │
-                                            └──► SLSA provenance (BuildKit)
+hardening branch ──► CI Gate workflow
+                      │
+                      ├─ Hadolint (Dockerfile lint)
+                      ├─ ShellCheck (script lint)
+                      ├─ Build (amd64, no push)
+                      ├─ Trivy scan (CRITICAL/HIGH = fail)
+                      └─ Smoke test (start container, verify healthcheck)
+                      │
+                      ▼
+               All gates pass?
+                 NO → fix on hardening, re-run
+                 YES ↓
+                      │
+PR: hardening → main ─► CODEOWNER approval required
+                      │
+                      ▼
+main branch ──────► Publish workflow
+                      │
+                      ├─ Final Trivy scan (belt-and-suspenders)
+                      ├─ Build multi-arch (amd64 + arm64)
+                      ├─ Push to ghcr.io (latest + YYYY.MM.DD + SHA)
+                      ├─ Cosign keyless signing (OIDC)
+                      ├─ Syft SBOM generation + attestation
+                      └─ SLSA provenance (BuildKit)
 
-Weekly cron ────► Rebuild all images (picks up base image patches)
-
-Nightly cron ───► Grype scan (all published images)
-
-On-demand ──────► OpenSSF Scorecard assessment
+Weekly cron ────────► Rebuild all images (picks up base image patches)
+Nightly cron ───────► Grype scan (all published images)
+On-demand ──────────► OpenSSF Scorecard assessment
 ```
 
-- **Build**: Multi-arch via `docker buildx` on GitHub Actions
-- **Scan**: Trivy (per-build gate) + Grype (nightly) + Hadolint + ShellCheck
-- **Sign**: Cosign keyless signing via Sigstore OIDC
-- **Attest**: SBOM (Syft/SPDX) + SLSA provenance (BuildKit)
-- **Push**: Tagged with `latest`, `YYYY.MM.DD`, and short SHA
-- **Monitor**: Dependabot watches base images, dependencies, and Actions weekly
-- **Assess**: OpenSSF Scorecard runs weekly for supply chain health
+| Workflow | Trigger | Purpose |
+|----------|---------|---------|
+| **CI Gate** | Push to `hardening`, PR to `main` | Validate: lint, build, scan, smoke test |
+| **Publish** | Push to `main`, weekly cron | Build, sign, attest, push to registry |
+| **Nightly Scan** | Daily cron | Grype scan of published images for new CVEs |
+| **Scorecard** | Push to `main`, weekly cron | OpenSSF supply chain health assessment |
+
+- **Gate**: `✅ All CI Gates Passed` is required by branch protection before merge
 - **Pinned**: All CI/CD actions are pinned by commit SHA
+- **Monitor**: Dependabot watches base images, dependencies, and Actions weekly
 
 ## Architecture Decision: Debian over Alpine
 

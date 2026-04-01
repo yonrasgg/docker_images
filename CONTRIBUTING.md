@@ -64,9 +64,43 @@ shellcheck sonarr/entrypoint.sh shared/hardening.sh
    - `HEALTHCHECK` directive
    - OCI labels (`org.opencontainers.image.*`)
 3. Add `entrypoint.sh` with PUID/PGID support
-4. Add the image to `.github/workflows/build-push.yml` matrix
-5. Add Dependabot config in `.github/dependabot.yml`
-6. Update the image table in `README.md` and `SECURITY.md`
+4. Add the image to `.github/workflows/ci-gate.yml` and `.github/workflows/build-push.yml` matrices
+5. Add a smoke test entry in `ci-gate.yml` with the correct port and health path
+6. Add Dependabot config in `.github/dependabot.yml`
+7. Update the image table in `README.md` and `SECURITY.md`
+
+## Branching Workflow
+
+All work happens on the `hardening` branch. The `main` branch only receives tested, scanned, compliant code via PR.
+
+```bash
+# 1. Start from the hardening branch
+git checkout hardening
+git pull origin hardening
+
+# 2. Make your changes
+#    Edit Dockerfiles, entrypoints, shared scripts, etc.
+
+# 3. Commit and push
+git add -A
+git commit -m "fix: resolve Trivy CVE in sonarr base image"
+git push origin hardening
+#    → CI Gate runs automatically (lint → build → scan → smoke test)
+
+# 4. Wait for CI Gate to pass
+#    Check: https://github.com/yonrasgg/docker_images/actions/workflows/ci-gate.yml
+
+# 5. Open a PR: hardening → main
+#    → CI Gate runs again on the PR
+#    → CODEOWNER review required
+#    → Squash merge when approved
+
+# 6. After merge to main:
+#    → Publish workflow runs automatically
+#    → Images are built, scanned again, pushed, signed, and attested
+```
+
+**Never push directly to `main`.** Branch protection enforces this.
 
 ## Supply Chain Security Requirements
 
@@ -94,8 +128,11 @@ All CI/CD changes must follow these rules:
 
 ## Pull Request Process
 
-1. Ensure all CI checks pass (lint, scan, build)
-2. Trivy scan must report 0 CRITICAL/HIGH vulnerabilities
-3. Update relevant documentation (README, SECURITY, CONTRIBUTING)
-4. One approval required from a CODEOWNER for merge
-5. Squash merge preferred for clean history
+1. Work on the `hardening` branch — push commits there
+2. CI Gate must pass (`✅ All CI Gates Passed` is green)
+3. Open a PR from `hardening` to `main`
+4. Trivy scan must report 0 CRITICAL/HIGH vulnerabilities
+5. Smoke tests must pass (container starts, healthcheck responds)
+6. Update relevant documentation (README, SECURITY, CONTRIBUTING)
+7. One approval required from a CODEOWNER
+8. Squash merge — keep `main` history clean

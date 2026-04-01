@@ -1,10 +1,10 @@
 # =============================================================================
-# Build, Scan, Sign, and Push Hardened Docker Images
+# Publish — Build, Sign, and Push Hardened Docker Images
+# Runs ONLY on main after CI Gate has validated the code.
 # Supply chain security: Cosign signatures, SBOM (Syft), SLSA provenance
-# Triggered on push to main, PRs, and weekly schedule
 # =============================================================================
 
-name: Build and Push Images
+name: Publish Images
 
 on:
   push:
@@ -17,8 +17,6 @@ on:
       - 'plex/**'
       - 'shared/**'
       - '.github/workflows/build-push.yml'
-  pull_request:
-    branches: [main]
   schedule:
     # Rebuild weekly to pick up base image security patches
     - cron: '0 4 * * 1'
@@ -72,7 +70,6 @@ jobs:
         uses: sigstore/cosign-installer@3454372f43399081ed03b604cb2d021dabca52bb # v3.8.2
 
       - name: Log in to GitHub Container Registry
-        if: github.event_name != 'pull_request'
         uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3.4.0
         with:
           registry: ${{ env.REGISTRY }}
@@ -88,26 +85,23 @@ jobs:
             type=raw,value=latest,enable={{is_default_branch}}
             type=raw,value={{date 'YYYY.MM.DD'}},enable={{is_default_branch}}
             type=sha,prefix=,format=short
-            type=ref,event=pr
 
-      # --- Build (scan target) ---
-      - name: Build image for scanning
-        uses: docker/build-push-action@263435318d21b8e681c14492fe198571cfb76f00 # v6.18.0
+      # --- Final safety scan before publish (belt-and-suspenders) ---
+      - name: Build image for final scan
+        uses: docker/build-push-action@v6
         with:
           context: ${{ matrix.image.context }}
           file: ${{ matrix.image.dockerfile }}
           platforms: linux/amd64
           push: false
           load: true
-          tags: ${{ env.IMAGE_PREFIX }}/${{ matrix.image.name }}:scan
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          tags: ${{ env.IMAGE_PREFIX }}/${{ matrix.image.name }}:preflight
+          cache-from: type=gha,scope=${{ matrix.image.name }}
 
-      # --- Vulnerability Scanning ---
-      - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@76071ef20d3b4b6e423f6358700a6aefe9742621 # v0.31.0
+      - name: "Trivy: final pre-publish scan"
+        uses: aquasecurity/trivy-action@master
         with:
-          image-ref: ${{ env.IMAGE_PREFIX }}/${{ matrix.image.name }}:scan
+          image-ref: ${{ env.IMAGE_PREFIX }}/${{ matrix.image.name }}:preflight
           format: 'sarif'
           output: 'trivy-${{ matrix.image.name }}.sarif'
           severity: 'CRITICAL,HIGH'
@@ -118,13 +112,12 @@ jobs:
         if: always()
         with:
           sarif_file: 'trivy-${{ matrix.image.name }}.sarif'
-          category: 'trivy-${{ matrix.image.name }}'
+          category: 'trivy-publish-${{ matrix.image.name }}'
 
-      # --- Push multi-arch image (main branch only) ---
+      # --- Build and push multi-arch image ---
       - name: Build and push image
         id: push
-        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
-        uses: docker/build-push-action@263435318d21b8e681c14492fe198571cfb76f00 # v6.18.0
+        uses: docker/build-push-action@v6
         with:
           context: ${{ matrix.image.context }}
           file: ${{ matrix.image.dockerfile }}
@@ -132,14 +125,13 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=${{ matrix.image.name }}
+          cache-to: type=gha,scope=${{ matrix.image.name }},mode=max
           sbom: true
           provenance: mode=max
 
       # --- Cosign Keyless Signing (OIDC / Sigstore) ---
       - name: Sign image with Cosign
-        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
         env:
           DIGEST: ${{ steps.push.outputs.digest }}
           TAGS: ${{ steps.meta.outputs.tags }}
@@ -152,7 +144,6 @@ jobs:
 
       # --- Generate and attach SBOM attestation ---
       - name: Generate SBOM with Syft
-        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
         uses: anchore/sbom-action@e11c554f704a0b820cbf8c51673f6945e0731532 # v0.20.0
         with:
           image: ${{ env.IMAGE_PREFIX }}/${{ matrix.image.name }}@${{ steps.push.outputs.digest }}
@@ -160,7 +151,6 @@ jobs:
           format: spdx-json
 
       - name: Attest SBOM with Cosign
-        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
         run: |
           cosign attest --yes \
             --predicate sbom-${{ matrix.image.name }}.spdx.json \
@@ -169,7 +159,6 @@ jobs:
 
       # --- Upload SBOM as build artifact ---
       - name: Upload SBOM artifact
-        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: sbom-${{ matrix.image.name }}
