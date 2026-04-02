@@ -10,8 +10,10 @@
 
 # ---- ALLOW: Build-required files only ----
 # shared/hardening.sh — copied by all Dockerfiles
+# shared/strip.sh    — final stripping, runs after user creation
 !shared/
 !shared/hardening.sh
+!shared/strip.sh
 
 # Sonarr
 !sonarr/
