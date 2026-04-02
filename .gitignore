@@ -1,6 +1,8 @@
 # =============================================================================
 # .gitignore — Hardened Docker Images Repository (Public)
-# Prevent secrets, credentials, and sensitive data from reaching the remote
+# Prevent secrets, credentials, and sensitive data from reaching the remote.
+# Review this file whenever new tooling or files are added to the project.
+# Last reviewed: 2026-04-02
 # =============================================================================
 
 # ---- Secrets & Credentials ----
@@ -8,6 +10,7 @@
 .env.*
 .env.local
 .env.production
+.env.staging
 **/*.key
 **/*.pem
 **/*.cer
@@ -19,18 +22,37 @@
 **/*.pub
 **/id_rsa
 **/id_ed25519
+**/id_ecdsa
+**/id_dsa
 **/.ssh/
 **/secrets/
 **/credentials/
 **/private/
+**/sensitive/
 
-# Cosign keys (keyless signing is used in CI, but just in case)
+# Cosign / Sigstore keys (keyless signing is used in CI, but defense-in-depth)
 cosign.key
 cosign.pub
+cosign-bundle.json
 *.sig
+*.bundle
+
+# Notary / DCT keys
+**/.notary/
+trust.json
+
+# SOPS / age encryption keys
+*.age
+*.agekey
+sops.yaml
+.sops.yaml
+**/.sops/
 
 # Docker config with registry auth tokens
 **/.docker/config.json
+**/.docker/daemon.json
+docker-compose.override.yml
+docker-compose.override.yaml
 
 # Cloud provider credentials
 **/.aws/
@@ -41,17 +63,58 @@ cosign.pub
 **/serviceaccount*.json
 **/*credentials*.json
 **/*token*.json
+**/*secret*.json
+**/*apikey*
+**/*api_key*
+**/*api-key*
+
+# CI/CD tokens and runner config
+**/.runner
+**/.credentials
+**/.credentials_rsaparams
+**/runner-registration-token
+
+# Terraform / IaC state (may contain secrets)
+**/*.tfstate
+**/*.tfstate.*
+**/.terraform/
+terraform.tfvars
+*.auto.tfvars
+
+# Ansible vault
+**/*vault*.yml
+**/*vault*.yaml
+!**/vault-policy*.yml
 
 # GPG keys
 **/*.gpg
 **/*.asc
 **/gnupg/
+**/.gnupg/
 
 # Password files
 **/*.password
 **/*.passwd
 **/htpasswd
 **/.htpasswd
+
+# Registry credential files
+.npmrc
+.pypirc
+pip.conf
+.yarnrc
+.yarnrc.yml
+
+# Shell history (may contain pasted tokens or secrets)
+**/.bash_history
+**/.zsh_history
+**/.sh_history
+**/.python_history
+**/.node_repl_history
+**/.psql_history
+**/.mysql_history
+**/.lesshst
+**/.wget-hsts
 
 # ---- Runtime Data & Configuration (generated at runtime) ----
 **/data/
@@ -65,6 +128,8 @@ cosign.pub
 **/*.db-wal
 **/*.sqlite
 **/*.sqlite3
+**/nzbdrone.pid
+**/MediaCover/
 
 # ---- Docker Build Artifacts ----
 **/*.tar
@@ -73,11 +138,30 @@ cosign.pub
 **/*.tar.xz
 **/*.deb
 **/*.rpm
+**/*.img
+**/*.iso
 
 # SBOM files generated locally
 sbom-*.json
 sbom-*.spdx
 **/trivy-*.sarif
+**/grype-*.json
+**/grype-*.sarif
+
+# ---- Build & Language Caches ----
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+**/node_modules/
+**/vendor/
+**/.cache/
+**/tmp/
+
+# Core dumps (may contain memory with secrets)
+core
+core.*
+**/*.core
+vgcore.*
 
 # ---- IDE & Editor ----
 .idea/
@@ -90,6 +174,7 @@ sbom-*.spdx
 .project
 .classpath
 .settings/
+*.code-workspace
 
 # ---- OS Artifacts ----
 .DS_Store
@@ -98,6 +183,7 @@ sbom-*.spdx
 Thumbs.db
 ehthumbs.db
 Desktop.ini
+$RECYCLE.BIN/
 $RECYCLE.BIN/
 
 # ---- Backups ----
