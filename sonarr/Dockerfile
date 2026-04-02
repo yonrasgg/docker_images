@@ -60,7 +60,7 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/* /tmp/* /var/tmp/*
 
-# Apply hardening
+# Apply hardening and strip image
 COPY shared/hardening.sh /tmp/hardening.sh
 RUN chmod +x /tmp/hardening.sh && /tmp/hardening.sh && rm /tmp/hardening.sh
 
@@ -77,6 +77,16 @@ RUN mkdir -p /config /downloads /tv && \
 
 COPY sonarr/entrypoint.sh /entrypoint.sh
 RUN chmod 755 /entrypoint.sh
+
+# Remove package manager and unnecessary components to prevent runtime tampering
+# Runs last to preserve build-time tools (groupadd, useradd, find, etc.)
+RUN rm -rf /usr/bin/apt* /usr/bin/dpkg* /usr/lib/apt /usr/lib/dpkg \
+           /etc/apt /var/lib/apt /var/lib/dpkg \
+           /usr/bin/find /usr/bin/locate /usr/bin/xargs \
+           /usr/bin/passwd /usr/sbin/adduser /usr/sbin/deluser \
+           /usr/sbin/groupadd /usr/sbin/useradd /usr/sbin/newusers \
+           /usr/bin/wall /usr/bin/write \
+           /usr/share/perl* /usr/share/zsh 2>/dev/null || true
 
 EXPOSE 8989
 

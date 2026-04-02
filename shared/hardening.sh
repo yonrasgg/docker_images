@@ -32,4 +32,39 @@ done
 echo "[hardening] Setting secure /tmp permissions..."
 chmod 1777 /tmp 2>/dev/null || true
 
+# --- Filesystem cleanup: remove unnecessary data from final image ---
+echo "[hardening] Removing documentation, man pages, and locale data..."
+rm -rf /usr/share/doc/* \
+       /usr/share/man/* \
+       /usr/share/info/* \
+       /usr/share/lintian/* \
+       /usr/share/linda/* \
+       /usr/share/groff/* \
+       /usr/share/gcc/* \
+       /usr/share/pixmaps/* \
+       /usr/share/icons/* \
+       /usr/share/locale/* \
+       /usr/share/i18n/* \
+       /usr/share/zoneinfo-icu/* \
+       /usr/share/bug/* \
+       /usr/share/common-licenses/* \
+       2>/dev/null || true
+
+echo "[hardening] Removing log files and caches..."
+rm -rf /var/log/* /var/cache/* /var/tmp/* 2>/dev/null || true
+
+echo "[hardening] Removing dpkg/apt package management metadata..."
+rm -rf /var/lib/dpkg/info/*.list \
+       /var/lib/dpkg/info/*.md5sums \
+       /var/lib/dpkg/info/*.conffiles \
+       /var/lib/dpkg/info/*.postinst \
+       /var/lib/dpkg/info/*.preinst \
+       /var/lib/dpkg/info/*.postrm \
+       /var/lib/dpkg/info/*.prerm \
+       /var/lib/dpkg/info/*.triggers \
+       2>/dev/null || true
+
+echo "[hardening] Removing shell history and profile files..."
+rm -f /root/.bash_history /root/.bashrc /root/.profile 2>/dev/null || true
+
 echo "[hardening] Done."

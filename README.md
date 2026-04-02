@@ -188,10 +188,6 @@ SABnzbd (Python-based) could theoretically run on Alpine, but using a consistent
 └── CODEOWNERS       # Code ownership and review requirements
 ```
 
-## License
-
-[MIT](LICENSE) — Geovanny Alpizar
-
 ### Legacy Images
 
 The following images are from earlier versions of this repository and are no longer actively maintained:
