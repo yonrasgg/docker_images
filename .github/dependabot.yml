@@ -44,6 +44,13 @@ updates:
     commit-message:
       prefix: "docker(plex)"
 
+  - package-ecosystem: "docker"
+    directory: "/dashy"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "docker(dashy)"
+
   # Python dependencies (SABnzbd)
   - package-ecosystem: "pip"
     directory: "/sabnzbd"

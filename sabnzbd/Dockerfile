@@ -30,7 +30,10 @@ RUN set -eux; \
 # Install Python dependencies (upgrade pip first for security patches)
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir --prefix=/install \
-      -r /opt/sabnzbd/requirements.txt
+      -r /opt/sabnzbd/requirements.txt && \
+    pip install --no-cache-dir --prefix=/install --upgrade \
+      "requests>=2.33.0" \
+      "cryptography>=46.0.6"
 
 # --- Stage 2: Runtime ---
 FROM ${PYTHON_IMAGE}
@@ -77,6 +80,10 @@ RUN mkdir -p /config /downloads /incomplete-downloads && \
 
 COPY sabnzbd/entrypoint.sh /entrypoint.sh
 RUN chmod 755 /entrypoint.sh
+
+# Strip package manager and unnecessary tools (must run after user creation)
+COPY shared/strip.sh /tmp/strip.sh
+RUN chmod +x /tmp/strip.sh && /tmp/strip.sh && rm /tmp/strip.sh
 
 EXPOSE 8080
 

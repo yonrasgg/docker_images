@@ -49,22 +49,26 @@ LABEL maintainer="yonrasgg" \
       org.opencontainers.image.licenses="MIT" \
       org.opencontainers.image.vendor="yonrasgg"
 
-# Install runtime dependencies (including Intel QSV/VA-API for HW transcoding)
+# Install runtime dependencies (including Intel QSV/VA-API for HW transcoding on amd64)
 # Apply all available security patches from Debian repos
+ARG TARGETARCH
 RUN apt-get update && \
     apt-get upgrade -y && \
     apt-get install -y --no-install-recommends \
       ca-certificates \
       curl \
       gosu \
-      intel-media-va-driver \
       libdrm2 \
       libva-drm2 \
       libva2 \
-      mesa-va-drivers \
       tini \
       tzdata \
       xmlstarlet && \
+    if [ "$TARGETARCH" = "amd64" ]; then \
+      apt-get install -y --no-install-recommends \
+        intel-media-va-driver \
+        mesa-va-drivers; \
+    fi && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/* /tmp/* /var/tmp/*
 
@@ -85,6 +89,10 @@ RUN mkdir -p /config /transcode /media && \
 
 COPY plex/entrypoint.sh /entrypoint.sh
 RUN chmod 755 /entrypoint.sh
+
+# Strip package manager and unnecessary tools (must run after user creation)
+COPY shared/strip.sh /tmp/strip.sh
+RUN chmod +x /tmp/strip.sh && /tmp/strip.sh && rm /tmp/strip.sh
 
 # Plex ports: 32400 (web), 1900 (DLNA/UDP), 32469 (DLNA/TCP), 5353 (Bonjour)
 EXPOSE 32400/tcp 1900/udp 32469/tcp 5353/udp

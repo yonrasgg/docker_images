@@ -60,7 +60,7 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/* /tmp/* /var/tmp/*
 
-# Apply hardening
+# Apply hardening and strip image
 COPY shared/hardening.sh /tmp/hardening.sh
 RUN chmod +x /tmp/hardening.sh && /tmp/hardening.sh && rm /tmp/hardening.sh
 
@@ -77,6 +77,10 @@ RUN mkdir -p /config /downloads /tv && \
 
 COPY sonarr/entrypoint.sh /entrypoint.sh
 RUN chmod 755 /entrypoint.sh
+
+# Strip package manager and unnecessary tools (must run after user creation)
+COPY shared/strip.sh /tmp/strip.sh
+RUN chmod +x /tmp/strip.sh && /tmp/strip.sh && rm /tmp/strip.sh
 
 EXPOSE 8989
 

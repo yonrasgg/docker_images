@@ -71,6 +71,10 @@ RUN mkdir -p /config /downloads && \
 COPY jackett/entrypoint.sh /entrypoint.sh
 RUN chmod 755 /entrypoint.sh
 
+# Strip package manager and unnecessary tools (must run after user creation)
+COPY shared/strip.sh /tmp/strip.sh
+RUN chmod +x /tmp/strip.sh && /tmp/strip.sh && rm /tmp/strip.sh
+
 EXPOSE 9117
 
 VOLUME ["/config", "/downloads"]

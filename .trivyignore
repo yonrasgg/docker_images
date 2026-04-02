@@ -9,24 +9,36 @@
 # The nightly security-scan.yml workflow reports ALL vulnerabilities
 # regardless of this file.
 #
-# Last reviewed: 2026-04-02
+# Last reviewed: 2026-04-01
 # =============================================================================
 
-# --- Sonarr .NET transitive dependencies ---
+# --- Sonarr / Radarr .NET transitive dependencies ---
 
 # System.Text.Json 6.0.9 → fix in 6.0.10/8.0.5 (bundled by Sonarr upstream)
 # DoS in JSON parser — low risk, only processes internal API payloads
 CVE-2024-43485
+
+# MimeKit (bundled by Sonarr/Radarr upstream)
+# CRLF Injection in Quoted Local-Part — low risk, images do not send email
+CVE-2026-30227
+
+# Microsoft.Bcl.Memory (bundled by Sonarr upstream via .NET runtime)
+# DoS via memory allocation — low risk, internal API payloads only
+CVE-2026-26127
+
+# Microsoft.AspNetCore (bundled by Sonarr upstream via .NET runtime)
+# DoS vulnerability — low risk, not internet-facing without reverse proxy
+CVE-2026-26130
+
+# Microsoft.IdentityModel.JsonWebTokens 6.8.0 → fix in 6.34.0 (bundled by Sonarr upstream)
+# .NET Identity DoS — medium risk, internal API only, no external JWT validation
+CVE-2024-21319
 
 # --- SABnzbd Python transitive dependencies ---
 
 # PyJWT 2.10.1 → fix in 2.12.0 (installed by sabnzbd requirements.txt)
 # Accepts unknown crit header extensions — low risk in container context
 CVE-2026-32597
-
-# cryptography 46.0.3 → fix in 46.0.5 (installed by sabnzbd requirements.txt)
-# Subgroup attack due to missing validation — low risk, no direct crypto API exposure
-CVE-2026-26007
 
 # orjson 3.11.3 → fix in 3.11.6 (installed by sabnzbd requirements.txt)
 # DoS via unbounded recursion — low risk, only processes trusted NZB payloads

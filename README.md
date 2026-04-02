@@ -19,6 +19,7 @@ Every image is built with multi-stage builds, runs as a non-root user, is scanne
 | **sabnzbd** | 8080 | Usenet binary downloader | `docker pull ghcr.io/yonrasgg/sabnzbd:latest` |
 | **jackett** | 9117 | Indexer proxy/aggregator | `docker pull ghcr.io/yonrasgg/jackett:latest` |
 | **plex** | 32400 | Media server with HW transcoding | `docker pull ghcr.io/yonrasgg/plex:latest` |
+| **dashy** | 8080 | Self-hosted application dashboard | `docker pull ghcr.io/yonrasgg/dashy:latest` |
 
 ## Supply Chain Security
 
@@ -63,8 +64,9 @@ docker buildx imagetools inspect ghcr.io/yonrasgg/sonarr:latest --format '{{json
 Every image applies these security controls:
 
 - **Multi-stage builds** — build tools never ship in runtime images
-- **Non-root execution** — services run as unprivileged `media` user via `gosu`
+- **Non-root execution** — services run as unprivileged `media` user via `gosu` (Debian) or `su-exec` (Alpine)
 - **SUID/SGID removal** — all unnecessary privileged binaries are stripped
+- **Package manager removal** — `apt`/`dpkg` (Debian) and `apk` (Alpine) are stripped from final images
 - **Minimal packages** — only runtime dependencies installed
 - **Health checks** — built-in container health monitoring
 - **`tini` PID 1** — proper signal handling and zombie reaping
@@ -162,9 +164,11 @@ On-demand ──────────► OpenSSF Scorecard assessment
 - **Pinned**: All CI/CD actions are pinned by commit SHA
 - **Monitor**: Dependabot watches base images, dependencies, and Actions weekly
 
-## Architecture Decision: Debian over Alpine
+## Architecture Decisions
 
-The media stack images use `debian:bookworm-slim` instead of Alpine because:
+### Debian for Media Stack
+
+The media stack images (Sonarr, Radarr, Jackett, Plex, SABnzbd) use `debian:bookworm-slim` because:
 
 - Sonarr, Radarr, and Jackett are .NET applications that depend on `libicu` and `glibc` — Alpine uses `musl`, which causes runtime incompatibilities
 - Plex Media Server distributes official `.deb` packages only
@@ -172,6 +176,18 @@ The media stack images use `debian:bookworm-slim` instead of Alpine because:
 - Security scanning coverage for Debian packages is more comprehensive in Trivy/Grype
 
 SABnzbd (Python-based) could theoretically run on Alpine, but using a consistent base across the stack simplifies maintenance and security patching.
+
+### Alpine for Dashy
+
+Dashy uses `node:20-alpine` because:
+
+- Dashy is a pure Node.js/Vue application with no native library dependencies
+- Alpine's recommended base image is the official Dashy documentation choice
+- Alpine produces significantly smaller images (~50 MB vs ~80 MB base)
+- `su-exec` replaces `gosu` as the lightweight Alpine equivalent for privilege dropping
+- `apk` is stripped post-build, same as `apt`/`dpkg` on Debian images
+
+Both base OS families share identical hardening and stripping scripts (`shared/hardening.sh`, `shared/strip.sh`) with automatic OS detection.
 
 ## Repository Structure
 
@@ -181,16 +197,15 @@ SABnzbd (Python-based) could theoretically run on Alpine, but using a consistent
 ├── sabnzbd/         # SABnzbd Dockerfile + entrypoint
 ├── jackett/         # Jackett Dockerfile + entrypoint
 ├── plex/            # Plex Dockerfile + entrypoint
-├── shared/          # Common hardening scripts
+├── dashy/           # Dashy Dockerfile + entrypoint (Alpine)
+├── shared/          # Common hardening + stripping scripts
+│   ├── hardening.sh # SUID/SGID removal, cleanup, crontab purge
+│   └── strip.sh     # Package manager + tool removal (Debian + Alpine)
 ├── .github/         # CI/CD workflows, Dependabot, Scorecard
 ├── SECURITY.md      # Security policy, vulnerability reporting, verification
 ├── CONTRIBUTING.md  # Development and contribution guide
 └── CODEOWNERS       # Code ownership and review requirements
 ```
-
-## License
-
-[MIT](LICENSE) — Geovanny Alpizar
 
 ### Legacy Images
 
