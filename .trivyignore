@@ -9,14 +9,26 @@
 # The nightly security-scan.yml workflow reports ALL vulnerabilities
 # regardless of this file.
 #
-# Last reviewed: 2026-04-02
+# Last reviewed: 2026-04-01
 # =============================================================================
 
-# --- Sonarr .NET transitive dependencies ---
+# --- Sonarr / Radarr .NET transitive dependencies ---
 
 # System.Text.Json 6.0.9 → fix in 6.0.10/8.0.5 (bundled by Sonarr upstream)
 # DoS in JSON parser — low risk, only processes internal API payloads
 CVE-2024-43485
+
+# MimeKit (bundled by Sonarr/Radarr upstream)
+# CRLF Injection in Quoted Local-Part — low risk, images do not send email
+CVE-2026-30227
+
+# Microsoft.Bcl.Memory (bundled by Sonarr upstream via .NET runtime)
+# DoS via memory allocation — low risk, internal API payloads only
+CVE-2026-26127
+
+# Microsoft.AspNetCore (bundled by Sonarr upstream via .NET runtime)
+# DoS vulnerability — low risk, not internet-facing without reverse proxy
+CVE-2026-26130
 
 # --- SABnzbd Python transitive dependencies ---
 

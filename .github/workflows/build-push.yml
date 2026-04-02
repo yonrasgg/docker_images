@@ -26,16 +26,17 @@ env:
   REGISTRY: ghcr.io
   IMAGE_PREFIX: ghcr.io/${{ github.repository_owner }}
 
-permissions:
-  contents: read
-  packages: write
-  security-events: write
-  id-token: write          # Required for Cosign keyless signing (OIDC)
-  attestations: write      # Required for GitHub artifact attestations
+permissions: read-all
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      security-events: write
+      id-token: write          # Required for Cosign keyless signing (OIDC)
+      attestations: write      # Required for GitHub artifact attestations
     strategy:
       fail-fast: false
       matrix:

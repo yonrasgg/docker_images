@@ -24,9 +24,7 @@ on:
   pull_request:
     branches: [main]
 
-permissions:
-  contents: read
-  security-events: write
+permissions: read-all
 
 jobs:
   # ------------------------------------------------------------------
@@ -66,6 +64,9 @@ jobs:
     name: "Build + Scan: ${{ matrix.image }}"
     needs: [hadolint, shellcheck]
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
     strategy:
       fail-fast: false
       matrix:
