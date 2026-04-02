@@ -56,7 +56,8 @@ RUN apt-get update && \
       mediainfo \
       tini \
       tzdata && \
-    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/* /tmp/* /var/tmp/*
 
 # Apply hardening
 COPY shared/hardening.sh /tmp/hardening.sh
