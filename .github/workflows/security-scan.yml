@@ -26,9 +26,17 @@ jobs:
         image: [sonarr, radarr, sabnzbd, jackett, plex]
     steps:
       - name: Pull latest image
-        run: docker pull ghcr.io/${{ github.repository_owner }}/${{ matrix.image }}:latest || true
+        id: pull
+        run: |
+          if docker pull ghcr.io/${{ github.repository_owner }}/${{ matrix.image }}:latest; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::Image ghcr.io/${{ github.repository_owner }}/${{ matrix.image }}:latest not found — skipping scan"
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Run Grype scan
+        if: steps.pull.outputs.exists == 'true'
         uses: anchore/scan-action@64a33b277ea7a1215a3c142735a1091341939ff5 # v4.1.2
         id: scan
         with:
@@ -38,7 +46,7 @@ jobs:
 
       - name: Upload SARIF
         uses: github/codeql-action/upload-sarif@5c8a8a642e79153f5d047b10ec1cba1d1cc65699 # v3.35.1
-        if: always()
+        if: always() && steps.pull.outputs.exists == 'true'
         with:
           sarif_file: ${{ steps.scan.outputs.sarif }}
           category: 'grype-nightly-${{ matrix.image }}'
