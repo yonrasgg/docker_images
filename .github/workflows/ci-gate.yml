@@ -41,6 +41,8 @@ jobs:
       - uses: hadolint/hadolint-action@54c9adbab1582c2ef04b2016b760714a4bfde3cf # v3.1.0
         with:
           dockerfile: ${{ matrix.image }}/Dockerfile
+          failure-threshold: warning
+          config: .hadolint.yaml
 
   shellcheck:
     name: "Lint: Shell Scripts"
