@@ -4,7 +4,7 @@
 # https://github.com/yonrasgg/docker_images
 # =============================================================================
 
-ARG PYTHON_IMAGE=python:3.12-slim-bookworm
+ARG PYTHON_IMAGE=python:3.13-slim-bookworm
 ARG BASE_IMAGE=debian:bookworm-slim
 
 # --- Stage 1: Download and prepare ---
@@ -27,8 +27,9 @@ RUN set -eux; \
     tar -xzf /tmp/sabnzbd.tar.gz -C /opt/sabnzbd --strip-components=1; \
     rm -f /tmp/sabnzbd.tar.gz
 
-# Install Python dependencies
-RUN pip install --no-cache-dir --prefix=/install \
+# Install Python dependencies (upgrade pip first for security patches)
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir --prefix=/install \
       -r /opt/sabnzbd/requirements.txt
 
 # --- Stage 2: Runtime ---
@@ -44,7 +45,9 @@ LABEL maintainer="yonrasgg" \
       org.opencontainers.image.licenses="MIT" \
       org.opencontainers.image.vendor="yonrasgg"
 
+# Install runtime dependencies and apply all available security patches
 RUN apt-get update && \
+    apt-get upgrade -y && \
     apt-get install -y --no-install-recommends \
       ca-certificates \
       curl \
