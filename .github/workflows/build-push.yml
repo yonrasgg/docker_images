@@ -45,21 +45,31 @@ jobs:
           - name: sonarr
             context: .
             dockerfile: sonarr/Dockerfile
+            platforms: linux/amd64,linux/arm64
           - name: radarr
             context: .
             dockerfile: radarr/Dockerfile
+            platforms: linux/amd64,linux/arm64
           - name: sabnzbd
             context: .
             dockerfile: sabnzbd/Dockerfile
+            platforms: linux/amd64,linux/arm64
           - name: jackett
             context: .
             dockerfile: jackett/Dockerfile
+            platforms: linux/amd64,linux/arm64
           - name: plex
             context: .
             dockerfile: plex/Dockerfile
+            platforms: linux/amd64,linux/arm64
           - name: dashy
             context: .
             dockerfile: dashy/Dockerfile
+            # amd64-only: QEMU arm64 emulation crashes during yarn install
+            # with "Illegal instruction" (native Node.js modules use
+            # instructions unsupported by QEMU user-mode). Re-enable arm64
+            # when GitHub Actions offers native arm64 runners.
+            platforms: linux/amd64
 
     steps:
       - name: Checkout repository
@@ -138,7 +148,7 @@ jobs:
         with:
           context: ${{ matrix.image.context }}
           file: ${{ matrix.image.dockerfile }}
-          platforms: linux/amd64,linux/arm64
+          platforms: ${{ matrix.image.platforms }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
