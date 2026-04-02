@@ -41,3 +41,7 @@ CVE-2026-32875
 # Unbounded decompression chain + streaming API issue — medium risk, mitigated by tini+healthcheck
 CVE-2025-66418
 CVE-2025-66471
+
+# urllib3 2.5.0 → fix in 2.6.3 (installed by sabnzbd requirements.txt)
+# Decompression-bomb safeguard bypass — medium risk, internal downloads only
+CVE-2026-21441
