@@ -34,8 +34,11 @@ chmod 1777 /tmp 2>/dev/null || true
 
 # --- Filesystem cleanup: remove unnecessary data from final image ---
 echo "[hardening] Removing documentation, man pages, and locale data..."
-rm -rf /usr/share/doc/* \
-       /usr/share/man/* \
+# Preserve /usr/share/common-licenses and per-package copyright files
+# for license-compliance (GPL/LGPL components require notice distribution)
+find /usr/share/doc -mindepth 1 -maxdepth 1 -type d -exec sh -c \
+  'for d; do find "$d" -not -name copyright -delete 2>/dev/null; done' _ {} + 2>/dev/null || true
+rm -rf /usr/share/man/* \
        /usr/share/info/* \
        /usr/share/lintian/* \
        /usr/share/linda/* \
@@ -47,7 +50,6 @@ rm -rf /usr/share/doc/* \
        /usr/share/i18n/* \
        /usr/share/zoneinfo-icu/* \
        /usr/share/bug/* \
-       /usr/share/common-licenses/* \
        2>/dev/null || true
 
 echo "[hardening] Removing log files and caches..."
