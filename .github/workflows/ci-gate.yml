@@ -1,0 +1,227 @@
+# =============================================================================
+# CI Gate — Quality & Security Validation
+# Runs on the hardening branch and on PRs targeting main.
+# ALL checks here must pass before a PR can be merged into main.
+# Nothing is published — this is the "prove it works" stage.
+# =============================================================================
+
+name: CI Gate
+
+on:
+  push:
+    branches: [hardening]
+    paths:
+      - 'sonarr/**'
+      - 'radarr/**'
+      - 'sabnzbd/**'
+      - 'jackett/**'
+      - 'plex/**'
+      - 'shared/**'
+      - '.github/workflows/ci-gate.yml'
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  # ------------------------------------------------------------------
+  # Stage 1: Static Analysis (fast, no Docker build needed)
+  # ------------------------------------------------------------------
+  hadolint:
+    name: "Lint: Dockerfile (${{ matrix.image }})"
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        image: [sonarr, radarr, sabnzbd, jackett, plex]
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: hadolint/hadolint-action@54c9adbab1582c2ef04b2016b760714a4bfde3cf # v3.1.0
+        with:
+          dockerfile: ${{ matrix.image }}/Dockerfile
+          failure-threshold: warning
+          config: .hadolint.yaml
+
+  shellcheck:
+    name: "Lint: Shell Scripts"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: ludeeus/action-shellcheck@00cae500b08a931fb5698e11e79bfbd38e612a38 # 2.0.0
+        with:
+          scandir: '.'
+          severity: warning
+          ignore_paths: '_legacy'
+
+  # ------------------------------------------------------------------
+  # Stage 2: Build + Vulnerability Scan (per image, amd64 only)
+  # Images are built but NEVER pushed. This is a validation gate.
+  # ------------------------------------------------------------------
+  build-and-scan:
+    name: "Build + Scan: ${{ matrix.image }}"
+    needs: [hadolint, shellcheck]
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        image: [sonarr, radarr, sabnzbd, jackett, plex]
+    env:
+      IMAGE_TAG: "ci-gate/${{ matrix.image }}:${{ github.sha }}"
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@b5ca514318bd6ebac0fb2aedd5d36ec1b5c232a2 # v3.10.0
+
+      - name: Build image (amd64 only, no push)
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
+        with:
+          context: .
+          file: ${{ matrix.image }}/Dockerfile
+          platforms: linux/amd64
+          push: false
+          load: true
+          tags: ${{ env.IMAGE_TAG }}
+          cache-from: type=gha,scope=${{ matrix.image }}
+          cache-to: type=gha,scope=${{ matrix.image }},mode=max
+
+      # --- Trivy: CRITICAL + HIGH with available fix must be zero ---
+      # Uses --ignore-unfixed to skip OS-level CVEs without distro patches.
+      # The nightly security-scan.yml reports ALL vulnerabilities for visibility.
+      - name: "Trivy: vulnerability scan"
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # v0.35.0
+        with:
+          image-ref: ${{ env.IMAGE_TAG }}
+          format: 'table'
+          severity: 'CRITICAL,HIGH'
+          exit-code: '1'
+          ignore-unfixed: true
+          trivyignores: '.trivyignore'
+
+      # --- Also upload SARIF for the Security tab ---
+      - name: "Trivy: generate SARIF"
+        if: always()
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # v0.35.0
+        with:
+          image-ref: ${{ env.IMAGE_TAG }}
+          format: 'sarif'
+          output: 'trivy-${{ matrix.image }}.sarif'
+          severity: 'CRITICAL,HIGH,MEDIUM'
+
+      - name: Upload Trivy SARIF
+        if: always()
+        uses: github/codeql-action/upload-sarif@5c8a8a642e79153f5d047b10ec1cba1d1cc65699 # v3.35.1
+        with:
+          sarif_file: 'trivy-${{ matrix.image }}.sarif'
+          category: 'trivy-gate-${{ matrix.image }}'
+
+  # ------------------------------------------------------------------
+  # Stage 3: Integration smoke test
+  # Start each container, wait for healthcheck, verify it responds.
+  # ------------------------------------------------------------------
+  smoke-test:
+    name: "Smoke Test: ${{ matrix.image.name }}"
+    needs: [build-and-scan]
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        image:
+          - name: sonarr
+            port: 8989
+            health_path: /ping
+            timeout: 120
+          - name: radarr
+            port: 7878
+            health_path: /ping
+            timeout: 120
+          - name: sabnzbd
+            port: 8080
+            health_path: /api?mode=version
+            timeout: 120
+          - name: jackett
+            port: 9117
+            health_path: /UI/Login
+            timeout: 120
+          - name: plex
+            port: 32400
+            health_path: /identity
+            timeout: 300
+    env:
+      IMAGE_TAG: "ci-gate/${{ matrix.image.name }}:${{ github.sha }}"
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@b5ca514318bd6ebac0fb2aedd5d36ec1b5c232a2 # v3.10.0
+
+      - name: Build image
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
+        with:
+          context: .
+          file: ${{ matrix.image.name }}/Dockerfile
+          platforms: linux/amd64
+          push: false
+          load: true
+          tags: ${{ env.IMAGE_TAG }}
+          cache-from: type=gha,scope=${{ matrix.image.name }}
+
+      - name: Start container
+        run: |
+          docker run -d \
+            --name test-${{ matrix.image.name }} \
+            -e PUID=1000 -e PGID=1000 \
+            -p ${{ matrix.image.port }}:${{ matrix.image.port }} \
+            ${{ env.IMAGE_TAG }}
+
+      - name: Wait for healthcheck (up to ${{ matrix.image.timeout }}s)
+        run: |
+          TIMEOUT=${{ matrix.image.timeout }}
+          INTERVAL=5
+          ATTEMPTS=$(( TIMEOUT / INTERVAL ))
+          echo "Waiting for ${{ matrix.image.name }} on port ${{ matrix.image.port }} (timeout: ${TIMEOUT}s)..."
+          for i in $(seq 1 "$ATTEMPTS"); do
+            if curl -fsS --max-time 5 http://localhost:${{ matrix.image.port }}${{ matrix.image.health_path }} > /dev/null 2>&1; then
+              echo "✓ ${{ matrix.image.name }} is healthy after $((i * INTERVAL))s"
+              exit 0
+            fi
+            sleep "$INTERVAL"
+          done
+          echo "✗ ${{ matrix.image.name }} did not become healthy within ${TIMEOUT}s"
+          docker logs test-${{ matrix.image.name }}
+          exit 1
+
+      - name: Cleanup
+        if: always()
+        run: docker rm -f test-${{ matrix.image.name }} 2>/dev/null || true
+
+  # ------------------------------------------------------------------
+  # Final status check — PR merge gate
+  # GitHub branch protection should require this job to pass.
+  # ------------------------------------------------------------------
+  gate-passed:
+    name: "✅ All CI Gates Passed"
+    needs: [hadolint, shellcheck, build-and-scan, smoke-test]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Check all gate results
+        run: |
+          echo "Hadolint:       ${{ needs.hadolint.result }}"
+          echo "ShellCheck:     ${{ needs.shellcheck.result }}"
+          echo "Build+Scan:     ${{ needs.build-and-scan.result }}"
+          echo "Smoke Tests:    ${{ needs.smoke-test.result }}"
+
+          if [[ "${{ needs.hadolint.result }}" != "success" ]] || \
+             [[ "${{ needs.shellcheck.result }}" != "success" ]] || \
+             [[ "${{ needs.build-and-scan.result }}" != "success" ]] || \
+             [[ "${{ needs.smoke-test.result }}" != "success" ]]; then
+            echo ""
+            echo "::error::One or more CI gates failed. Fix the issues on the hardening branch before merging to main."
+            exit 1
+          fi
+
+          echo ""
+          echo "All gates passed. This PR is safe to merge into main."

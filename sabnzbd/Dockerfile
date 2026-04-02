@@ -10,6 +10,8 @@ ARG BASE_IMAGE=debian:bookworm-slim
 # --- Stage 1: Download and prepare ---
 FROM ${PYTHON_IMAGE} AS builder
 
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
 RUN apt-get update && \
     apt-get install -y --no-install-recommends curl ca-certificates && \
     rm -rf /var/lib/apt/lists/*
@@ -32,6 +34,8 @@ RUN pip install --no-cache-dir --prefix=/install \
 # --- Stage 2: Runtime ---
 FROM ${PYTHON_IMAGE}
 
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
 LABEL maintainer="yonrasgg" \
       org.opencontainers.image.title="Hardened SABnzbd" \
       org.opencontainers.image.description="Security-hardened SABnzbd Usenet downloader" \
@@ -50,7 +54,6 @@ RUN apt-get update && \
       tini \
       tzdata \
       unrar-free && \
-    apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Apply hardening

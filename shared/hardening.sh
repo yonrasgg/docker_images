@@ -22,7 +22,7 @@ echo "[hardening] Removing fstab..."
 rm -f /etc/fstab 2>/dev/null || true
 
 echo "[hardening] Removing world-writable directories..."
-find / -xdev -type d -perm +0002 -exec chmod o-w {} + 2>/dev/null || true
+find / -xdev -type d -perm /0002 -exec chmod o-w {} + 2>/dev/null || true
 
 echo "[hardening] Removing unnecessary user accounts..."
 for user in games news uucp proxy list; do

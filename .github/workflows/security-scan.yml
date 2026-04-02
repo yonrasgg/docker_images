@@ -1,15 +1,14 @@
 # =============================================================================
-# Security Scanning for Docker Images
-# Runs on all PRs and nightly on main
+# Nightly Security Scan — Published Images
+# Catches new CVEs disclosed after an image was built.
+# Linting is handled by ci-gate.yml (runs on hardening branch / PRs).
 # =============================================================================
 
-name: Security Scan
+name: Nightly Security Scan
 
 on:
-  pull_request:
-    branches: [main]
   schedule:
-    # Nightly scan to catch new CVEs
+    # Nightly scan to catch new CVEs in published images
     - cron: '0 2 * * *'
   workflow_dispatch:
 
@@ -18,42 +17,19 @@ permissions:
   security-events: write
 
 jobs:
-  hadolint:
-    name: Dockerfile Linting
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        dockerfile:
-          - sonarr/Dockerfile
-          - radarr/Dockerfile
-          - sabnzbd/Dockerfile
-          - jackett/Dockerfile
-          - plex/Dockerfile
-    steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-      - uses: hadolint/hadolint-action@54c9adbab1582c2ef04b2016b760714a4bfde3cf # v3.1.0
-        with:
-          dockerfile: ${{ matrix.dockerfile }}
-          failure-threshold: warning
-
   grype-scan:
-    name: Grype Vulnerability Scan
+    name: "Grype: ${{ matrix.image }}"
     runs-on: ubuntu-latest
-    if: github.event_name == 'schedule'
     strategy:
+      fail-fast: false
       matrix:
-        image:
-          - sonarr
-          - radarr
-          - sabnzbd
-          - jackett
-          - plex
+        image: [sonarr, radarr, sabnzbd, jackett, plex]
     steps:
       - name: Pull latest image
         run: docker pull ghcr.io/${{ github.repository_owner }}/${{ matrix.image }}:latest || true
 
       - name: Run Grype scan
-        uses: anchore/scan-action@2c901ab7378897c01b8efaa2d0c9bf519cc64b9e # v4.1.2
+        uses: anchore/scan-action@64a33b277ea7a1215a3c142735a1091341939ff5 # v4.1.2
         id: scan
         with:
           image: ghcr.io/${{ github.repository_owner }}/${{ matrix.image }}:latest
@@ -61,19 +37,8 @@ jobs:
           fail-build: false
 
       - name: Upload SARIF
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@5c8a8a642e79153f5d047b10ec1cba1d1cc65699 # v3.35.1
         if: always()
         with:
           sarif_file: ${{ steps.scan.outputs.sarif }}
-          category: 'grype-${{ matrix.image }}'
-
-  shellcheck:
-    name: Shell Script Linting
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-      - name: Run ShellCheck
-        uses: ludeeus/action-shellcheck@00cae500b08a931fb5698e11e79bfbd38e612a38 # v2.0.0
-        with:
-          scandir: '.'
-          severity: warning
+          category: 'grype-nightly-${{ matrix.image }}'

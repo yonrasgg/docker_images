@@ -1,48 +1,79 @@
 # =============================================================================
-# .dockerignore — Global (repo root context)
-# Prevents leaking sensitive data and reduces build context size
+# .dockerignore — Whitelist approach (deny-all, allow only what builds need)
+# This is the safest strategy: nothing enters the build context unless
+# explicitly permitted. Prevents accidental exfiltration of secrets,
+# credentials, CI config, or repository metadata into image layers.
 # =============================================================================
 
-# Git
-.git
-.gitignore
-.github
+# ---- DENY EVERYTHING ----
+*
 
-# Documentation
-README.md
-CONTRIBUTING.md
-SECURITY.md
-LICENSE
-*.md
+# ---- ALLOW: Build-required files only ----
+# shared/hardening.sh — copied by all Dockerfiles
+!shared/
+!shared/hardening.sh
 
-# Environment and secrets
-.env
-.env.*
+# Sonarr
+!sonarr/
+!sonarr/Dockerfile
+!sonarr/entrypoint.sh
+
+# Radarr
+!radarr/
+!radarr/Dockerfile
+!radarr/entrypoint.sh
+
+# SABnzbd
+!sabnzbd/
+!sabnzbd/Dockerfile
+!sabnzbd/entrypoint.sh
+
+# Jackett
+!jackett/
+!jackett/Dockerfile
+!jackett/entrypoint.sh
+
+# Plex
+!plex/
+!plex/Dockerfile
+!plex/entrypoint.sh
+
+# ---- DENY: Anything that sneaks into allowed directories ----
+# Even inside allowed dirs, block sensitive patterns as defense-in-depth
+**/.env
+**/.env.*
 **/*.key
 **/*.pem
 **/*.cer
+**/*.crt
 **/*.p12
-
-# Runtime data / logs
-**/data/
-**/logs/
+**/*.pfx
+**/*.jks
+**/*.sig
+**/*.gpg
+**/*.asc
+**/*.password
+**/*.passwd
+**/.git
+**/.gitignore
+**/*.md
 **/*.log
-
-# IDE
-.idea/
-.vscode/
-*.swp
-*.swo
-
-# OS artifacts
-.DS_Store
-Thumbs.db
-
-# Legacy images (deprecated, not part of media stack builds)
-_legacy/
-
-# Build caches
+**/*.db
+**/*.sqlite*
 **/__pycache__/
 **/*.pyc
 **/*.tar
 **/*.tar.gz
+**/*.sarif
+**/sbom-*
+**/secrets/
+**/credentials/
+**/private/
+**/.docker/
+**/.aws/
+**/.azure/
+**/.gcp/
+**/.kube/
+**/config.xml
+**/*.ini
+**/Preferences.xml

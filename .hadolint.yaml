@@ -1,0 +1,16 @@
+# =============================================================================
+# Hadolint Configuration
+# https://github.com/hadolint/hadolint#configure
+# =============================================================================
+
+# We intentionally do NOT pin apt package versions because:
+# - Images are rebuilt weekly to pick up security patches
+# - Pinning creates maintenance burden and stale CVEs
+# - Trivy scans gate every build for CRITICAL/HIGH vulnerabilities
+ignored:
+  - DL3006   # FROM with ARG variable — images are always tagged via ARG default
+  - DL3008   # Pin versions in apt-get install (we want latest for security)
+  - DL3013   # Pin versions in pip install (requirements.txt handles this)
+
+# Treat all other rules as errors
+failure-threshold: warning
