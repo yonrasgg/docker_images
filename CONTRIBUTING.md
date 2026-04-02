@@ -26,8 +26,11 @@ Thank you for your interest in contributing to this project.
 All Dockerfiles reference `shared/hardening.sh` via `COPY`, so builds must run from the repo root:
 
 ```bash
-# Build a specific image
+# Build a specific image (Debian-based)
 docker build -f sonarr/Dockerfile -t sonarr:dev .
+
+# Build a specific image (Alpine-based)
+docker build -f dashy/Dockerfile -t dashy:dev .
 
 # Build for a specific architecture
 docker buildx build -f sonarr/Dockerfile --platform linux/arm64 -t sonarr:dev-arm64 .
@@ -49,7 +52,7 @@ trivy image --severity CRITICAL,HIGH sonarr:dev
 hadolint sonarr/Dockerfile
 
 # Lint shell scripts
-shellcheck sonarr/entrypoint.sh shared/hardening.sh
+shellcheck sonarr/entrypoint.sh shared/hardening.sh shared/strip.sh
 ```
 
 ## Adding a New Image
@@ -57,9 +60,10 @@ shellcheck sonarr/entrypoint.sh shared/hardening.sh
 1. Create a directory: `<image-name>/`
 2. Add `Dockerfile` following the existing patterns:
    - Multi-stage build (downloader + runtime)
-   - Use `debian:bookworm-slim` as base (see [Architecture Decision](README.md#architecture-decision-debian-over-alpine) for rationale)
-   - Apply `shared/hardening.sh`
-   - Non-root user via `gosu`
+   - Use `debian:bookworm-slim` as base for .NET/media apps, or `node:20-alpine` for Node.js apps (see [Architecture Decisions](README.md#architecture-decisions))
+   - Apply `shared/hardening.sh` for security hardening
+   - Apply `shared/strip.sh` as the final build step (after user creation)
+   - Non-root user via `gosu` (Debian) or `su-exec` (Alpine)
    - `tini` as PID 1
    - `HEALTHCHECK` directive
    - OCI labels (`org.opencontainers.image.*`)

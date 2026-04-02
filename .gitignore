@@ -163,6 +163,11 @@ core.*
 **/*.core
 vgcore.*
 
+# ---- Copilot Agent Customization (local-only) ----
+.github/copilot-instructions.md
+.github/instructions/
+.github/skills/
+
 # ---- IDE & Editor ----
 .idea/
 .vscode/

@@ -15,6 +15,7 @@ on:
       - 'sabnzbd/**'
       - 'jackett/**'
       - 'plex/**'
+      - 'dashy/**'
       - 'shared/**'
       - '.github/workflows/build-push.yml'
   schedule:
@@ -56,6 +57,9 @@ jobs:
           - name: plex
             context: .
             dockerfile: plex/Dockerfile
+          - name: dashy
+            context: .
+            dockerfile: dashy/Dockerfile
 
     steps:
       - name: Checkout repository

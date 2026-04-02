@@ -24,7 +24,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        image: [sonarr, radarr, sabnzbd, jackett, plex]
+        image: [sonarr, radarr, sabnzbd, jackett, plex, dashy]
     steps:
       - name: Pull latest image
         id: pull

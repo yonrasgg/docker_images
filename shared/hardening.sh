@@ -6,8 +6,8 @@
 # =============================================================================
 set -eu
 
-echo "[hardening] Removing SUID/SGID bits (except gosu)..."
-find / -perm /6000 -type f ! -name gosu -exec chmod a-s {} + 2>/dev/null || true
+echo "[hardening] Removing SUID/SGID bits (except gosu and su-exec)..."
+find / -perm /6000 -type f ! -name gosu ! -name su-exec -exec chmod a-s {} + 2>/dev/null || true
 
 echo "[hardening] Removing crontabs and scheduled tasks..."
 rm -rf /var/spool/cron /etc/crontabs /etc/periodic 2>/dev/null || true
@@ -56,15 +56,18 @@ echo "[hardening] Removing log files and caches..."
 rm -rf /var/log/* /var/cache/* /var/tmp/* 2>/dev/null || true
 
 echo "[hardening] Removing dpkg/apt package management metadata..."
-rm -rf /var/lib/dpkg/info/*.list \
-       /var/lib/dpkg/info/*.md5sums \
-       /var/lib/dpkg/info/*.conffiles \
-       /var/lib/dpkg/info/*.postinst \
-       /var/lib/dpkg/info/*.preinst \
-       /var/lib/dpkg/info/*.postrm \
-       /var/lib/dpkg/info/*.prerm \
-       /var/lib/dpkg/info/*.triggers \
-       2>/dev/null || true
+# Skip on Alpine (uses apk, handled by strip.sh)
+if [ -d /var/lib/dpkg ]; then
+    rm -rf /var/lib/dpkg/info/*.list \
+           /var/lib/dpkg/info/*.md5sums \
+           /var/lib/dpkg/info/*.conffiles \
+           /var/lib/dpkg/info/*.postinst \
+           /var/lib/dpkg/info/*.preinst \
+           /var/lib/dpkg/info/*.postrm \
+           /var/lib/dpkg/info/*.prerm \
+           /var/lib/dpkg/info/*.triggers \
+           2>/dev/null || true
+fi
 
 echo "[hardening] Removing shell history and profile files..."
 rm -f /root/.bash_history /root/.bashrc /root/.profile 2>/dev/null || true

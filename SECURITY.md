@@ -11,6 +11,7 @@ Only the `latest` tag of each image receives security updates. All images are re
 | sabnzbd | ✅ latest  |
 | jackett | ✅ latest  |
 | plex    | ✅ latest  |
+| dashy   | ✅ latest  |
 
 ## Supply Chain Security
 
