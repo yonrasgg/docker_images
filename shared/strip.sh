@@ -19,8 +19,10 @@ echo "[strip] Detected OS: ${OS_FAMILY}"
 
 echo "[strip] Removing package manager..."
 if [ "$OS_FAMILY" = "alpine" ]; then
-    rm -rf /sbin/apk /etc/apk /lib/apk /usr/share/apk \
-           /var/cache/apk /var/lib/apk
+    # Remove apk binary, config, and caches but keep /lib/apk/db/installed
+    # so Trivy/Grype/Syft can detect installed OS packages and generate SBOMs.
+    rm -rf /sbin/apk /etc/apk /usr/share/apk \
+           /var/cache/apk
 else
     # Preserve /var/lib/dpkg/status so Trivy/Grype can detect OS packages.
     # Remove only the binaries, libraries, and config — not the package database.
