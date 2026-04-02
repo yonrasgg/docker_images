@@ -13,7 +13,6 @@ ignored:
   - DL3008   # Pin versions in apt-get install (we want latest for security)
   - DL3013   # Pin versions in pip install (requirements.txt handles this)
   - DL3018   # Pin versions in apk add — same rationale as DL3008, weekly rebuilds
-  - DL4006   # Set -o pipefail — Alpine BusyBox sh does not support pipefail
 
 # Treat all other rules as errors
 failure-threshold: warning

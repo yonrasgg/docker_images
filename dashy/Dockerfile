@@ -14,6 +14,7 @@ WORKDIR /app
 RUN apk add --no-cache curl git
 
 # Download latest Dashy release
+# hadolint ignore=DL4006
 RUN set -eux; \
     DASHY_VERSION=$(curl -sL https://api.github.com/repos/Lissy93/dashy/releases/latest | \
       grep '"tag_name"' | sed 's/.*"tag_name": *"//;s/".*//'); \
