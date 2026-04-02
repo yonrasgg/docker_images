@@ -53,8 +53,10 @@ RUN apk update && apk upgrade && \
 COPY shared/hardening.sh /tmp/hardening.sh
 RUN chmod +x /tmp/hardening.sh && /tmp/hardening.sh && rm /tmp/hardening.sh
 
-# Create non-root user
-RUN addgroup -g 1000 media && \
+# Create non-root user (remove node user/group from base image first)
+RUN deluser --remove-home node 2>/dev/null || true && \
+    delgroup node 2>/dev/null || true && \
+    addgroup -g 1000 media && \
     adduser -u 1000 -G media -h /app -s /sbin/nologin -D media
 
 # Copy built application from builder
