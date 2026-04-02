@@ -68,6 +68,9 @@ RUN deluser --remove-home node 2>/dev/null || true && \
 # Copy built application from builder
 COPY --from=builder /app /app
 
+# Dashy defaults to port 4000; override to match EXPOSE
+ENV PORT=8080
+
 RUN mkdir -p /app/user-data && \
     chown -R media:media /app
 
