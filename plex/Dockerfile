@@ -50,7 +50,9 @@ LABEL maintainer="yonrasgg" \
       org.opencontainers.image.vendor="yonrasgg"
 
 # Install runtime dependencies (including Intel QSV/VA-API for HW transcoding)
+# Apply all available security patches from Debian repos
 RUN apt-get update && \
+    apt-get upgrade -y && \
     apt-get install -y --no-install-recommends \
       ca-certificates \
       curl \

@@ -44,7 +44,9 @@ LABEL maintainer="yonrasgg" \
       org.opencontainers.image.licenses="MIT" \
       org.opencontainers.image.vendor="yonrasgg"
 
+# Install runtime dependencies and apply all available security patches
 RUN apt-get update && \
+    apt-get upgrade -y && \
     apt-get install -y --no-install-recommends \
       ca-certificates \
       curl \
