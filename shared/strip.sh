@@ -22,8 +22,13 @@ if [ "$OS_FAMILY" = "alpine" ]; then
     rm -rf /sbin/apk /etc/apk /lib/apk /usr/share/apk \
            /var/cache/apk /var/lib/apk
 else
+    # Preserve /var/lib/dpkg/status so Trivy/Grype can detect OS packages.
+    # Remove only the binaries, libraries, and config — not the package database.
     rm -rf /usr/bin/apt* /usr/bin/dpkg* /usr/lib/apt /usr/lib/dpkg \
-           /etc/apt /var/lib/apt /var/lib/dpkg
+           /etc/apt /var/lib/apt \
+           /var/lib/dpkg/info /var/lib/dpkg/updates \
+           /var/lib/dpkg/alternatives /var/lib/dpkg/triggers \
+           /var/lib/dpkg/available
 fi
 
 echo "[strip] Removing file-search utilities..."

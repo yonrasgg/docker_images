@@ -31,9 +31,9 @@ RUN set -eux; \
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir --prefix=/install \
       -r /opt/sabnzbd/requirements.txt && \
-    pip install --no-cache-dir --prefix=/install --upgrade \
+    pip install --no-cache-dir --prefix=/install --force-reinstall --no-deps \
       "requests>=2.33.0" \
-      "cryptography>=46.0.6"
+      "cryptography>=46.0.5"
 
 # --- Stage 2: Runtime ---
 FROM ${PYTHON_IMAGE}
