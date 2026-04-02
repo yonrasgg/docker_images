@@ -9,7 +9,7 @@
 # The nightly security-scan.yml workflow reports ALL vulnerabilities
 # regardless of this file.
 #
-# Last reviewed: 2026-04-01
+# Last reviewed: 2026-04-02
 # =============================================================================
 
 # --- Sonarr / Radarr .NET transitive dependencies ---
@@ -57,3 +57,45 @@ CVE-2025-66471
 # urllib3 2.5.0 → fix in 2.6.3 (installed by sabnzbd requirements.txt)
 # Decompression-bomb safeguard bypass — medium risk, internal downloads only
 CVE-2026-21441
+
+# cryptography 46.0.3 → fix in 46.0.5 (installed by sabnzbd requirements.txt)
+# Subgroup attack due to missing validation — medium risk, used for HTTPS downloads only,
+# not processing untrusted cryptographic input; upgrade attempted via --force-reinstall
+# but GHA layer cache may serve stale version until cache expires
+# Review: 2026-05-01
+CVE-2026-26007
+
+# --- Dashy Node.js transitive dependencies ---
+# These are upstream Dashy application dependencies pinned by yarn.lock.
+# Fixes require MAJOR version bumps (glob 10→11, minimatch 9→10, tar 6→7)
+# that would break the application build. Dashy runs behind a reverse proxy
+# in a trusted home network; these deps process only local dashboard config.
+# Review: 2026-05-01
+
+# cross-spawn 7.0.3 → fix in 7.0.5 (Dashy transitive dep)
+# ReDoS via malicious command arguments — low risk, no user-supplied command execution
+CVE-2024-21538
+
+# glob 10.4.2 → fix in 11.1.0 (Dashy transitive dep, MAJOR bump required)
+# Command injection via malicious patterns — low risk, only processes local config
+CVE-2025-64756
+
+# lodash 4.17.23 → fix in 4.18.0 (Dashy transitive dep)
+# Incomplete prototype pollution fix — low risk, dashboard processes trusted config only
+CVE-2026-4800
+
+# minimatch 9.0.5 → fix in 10.2.1+ (Dashy transitive dep, MAJOR bump required)
+# ReDoS via crafted patterns — low risk, patterns come from local config only
+CVE-2026-26996
+CVE-2026-27903
+CVE-2026-27904
+
+# tar 6.2.1 → fix in 7.5.3+ (Dashy transitive dep, MAJOR bump required)
+# Arbitrary file overwrite/creation/read via path traversal — low risk, Dashy
+# does not extract user-supplied archives; tar is a build-time transitive dep
+CVE-2026-23745
+CVE-2026-23950
+CVE-2026-24842
+CVE-2026-26960
+CVE-2026-29786
+CVE-2026-31802
