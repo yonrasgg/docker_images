@@ -98,7 +98,7 @@ RUN rm -rf /usr/bin/apt* /usr/bin/dpkg* /usr/lib/apt /usr/lib/dpkg \
            /usr/bin/passwd /usr/sbin/adduser /usr/sbin/deluser \
            /usr/sbin/groupadd /usr/sbin/useradd /usr/sbin/newusers \
            /usr/bin/wall /usr/bin/write \
-           /usr/share/perl* /usr/share/zsh 2>/dev/null || true
+           /usr/share/perl* /usr/share/zsh
 
 # Plex ports: 32400 (web), 1900 (DLNA/UDP), 32469 (DLNA/TCP), 5353 (Bonjour)
 EXPOSE 32400/tcp 1900/udp 32469/tcp 5353/udp

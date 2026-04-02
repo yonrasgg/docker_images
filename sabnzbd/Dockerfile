@@ -91,7 +91,7 @@ RUN rm -rf /usr/bin/apt* /usr/bin/dpkg* /usr/lib/apt /usr/lib/dpkg \
            /usr/bin/wall /usr/bin/write \
            /usr/share/perl* /usr/share/zsh \
            /usr/local/lib/python3.13/site-packages/pip* \
-           /usr/local/bin/pip* 2>/dev/null || true
+           /usr/local/bin/pip*
 
 EXPOSE 8080
 

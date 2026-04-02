@@ -82,7 +82,7 @@ RUN rm -rf /usr/bin/apt* /usr/bin/dpkg* /usr/lib/apt /usr/lib/dpkg \
            /usr/bin/passwd /usr/sbin/adduser /usr/sbin/deluser \
            /usr/sbin/groupadd /usr/sbin/useradd /usr/sbin/newusers \
            /usr/bin/wall /usr/bin/write \
-           /usr/share/perl* /usr/share/zsh 2>/dev/null || true
+           /usr/share/perl* /usr/share/zsh
 
 EXPOSE 7878
 
