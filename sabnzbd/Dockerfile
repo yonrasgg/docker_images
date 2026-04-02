@@ -30,7 +30,10 @@ RUN set -eux; \
 # Install Python dependencies (upgrade pip first for security patches)
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir --prefix=/install \
-      -r /opt/sabnzbd/requirements.txt
+      -r /opt/sabnzbd/requirements.txt && \
+    pip install --no-cache-dir --prefix=/install --upgrade \
+      "requests>=2.33.0" \
+      "cryptography>=46.0.6"
 
 # --- Stage 2: Runtime ---
 FROM ${PYTHON_IMAGE}
@@ -86,7 +89,9 @@ RUN rm -rf /usr/bin/apt* /usr/bin/dpkg* /usr/lib/apt /usr/lib/dpkg \
            /usr/bin/passwd /usr/sbin/adduser /usr/sbin/deluser \
            /usr/sbin/groupadd /usr/sbin/useradd /usr/sbin/newusers \
            /usr/bin/wall /usr/bin/write \
-           /usr/share/perl* /usr/share/zsh 2>/dev/null || true
+           /usr/share/perl* /usr/share/zsh \
+           /usr/local/lib/python3.13/site-packages/pip* \
+           /usr/local/bin/pip* 2>/dev/null || true
 
 EXPOSE 8080
 

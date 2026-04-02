@@ -30,15 +30,15 @@ CVE-2026-26127
 # DoS vulnerability — low risk, not internet-facing without reverse proxy
 CVE-2026-26130
 
+# Microsoft.IdentityModel.JsonWebTokens 6.8.0 → fix in 6.34.0 (bundled by Sonarr upstream)
+# .NET Identity DoS — medium risk, internal API only, no external JWT validation
+CVE-2024-21319
+
 # --- SABnzbd Python transitive dependencies ---
 
 # PyJWT 2.10.1 → fix in 2.12.0 (installed by sabnzbd requirements.txt)
 # Accepts unknown crit header extensions — low risk in container context
 CVE-2026-32597
-
-# cryptography 46.0.3 → fix in 46.0.5 (installed by sabnzbd requirements.txt)
-# Subgroup attack due to missing validation — low risk, no direct crypto API exposure
-CVE-2026-26007
 
 # orjson 3.11.3 → fix in 3.11.6 (installed by sabnzbd requirements.txt)
 # DoS via unbounded recursion — low risk, only processes trusted NZB payloads
