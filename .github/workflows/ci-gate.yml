@@ -18,6 +18,9 @@ on:
       - 'plex/**'
       - 'shared/**'
       - '.github/workflows/ci-gate.yml'
+      - '.hadolint.yaml'
+      - '.trivyignore'
+      - '.dockerignore'
   pull_request:
     branches: [main]
 
