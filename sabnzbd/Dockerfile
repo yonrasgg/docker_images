@@ -25,7 +25,12 @@ RUN set -eux; \
       "https://github.com/sabnzbd/sabnzbd/releases/download/${SABNZBD_VERSION}/SABnzbd-${SABNZBD_VERSION}-src.tar.gz"; \
     mkdir -p /opt/sabnzbd; \
     tar -xzf /tmp/sabnzbd.tar.gz -C /opt/sabnzbd --strip-components=1; \
-    rm -f /tmp/sabnzbd.tar.gz
+    rm -f /tmp/sabnzbd.tar.gz; \
+    # Remove Node.js frontend tooling files (not needed at Python runtime,
+    # and they contain transitive CVEs that Trivy flags as false positives)
+    rm -rf /opt/sabnzbd/package.json /opt/sabnzbd/package-lock.json \
+           /opt/sabnzbd/node_modules /opt/sabnzbd/yarn.lock \
+           /opt/sabnzbd/.npm /opt/sabnzbd/Gruntfile.js /opt/sabnzbd/gulpfile.js
 
 # Install Python dependencies (upgrade pip first for security patches)
 RUN pip install --no-cache-dir --upgrade pip && \
