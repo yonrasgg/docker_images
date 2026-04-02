@@ -50,8 +50,10 @@ RUN apk update && apk upgrade && \
     rm -rf /var/cache/apk/* && \
     # Remove Python (shipped by node:20-alpine for node-gyp builds) —
     # not needed at Dashy runtime and contains flagged cryptography CVE
-    rm -rf /usr/lib/python* /usr/bin/python* \
-           /usr/lib/libpython* /usr/include/python*
+    rm -rf /usr/lib/python* /usr/local/lib/python* \
+           /usr/bin/python* /usr/local/bin/python* \
+           /usr/lib/libpython* /usr/local/lib/libpython* \
+           /usr/include/python* /usr/local/include/python*
 
 # Apply hardening
 COPY shared/hardening.sh /tmp/hardening.sh

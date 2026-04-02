@@ -80,6 +80,10 @@ RUN groupadd -g 1000 media && \
 COPY --from=builder /install /usr/local
 COPY --from=builder /opt/sabnzbd /opt/sabnzbd
 
+# Remove any Node.js frontend tooling that survived the build (defense-in-depth)
+RUN find /opt/sabnzbd /usr/local -name "package.json" -o -name "package-lock.json" \
+      -o -name "yarn.lock" -o -name "node_modules" 2>/dev/null | xargs rm -rf 2>/dev/null || true
+
 RUN mkdir -p /config /downloads /incomplete-downloads && \
     chown -R media:media /opt/sabnzbd /config /downloads /incomplete-downloads
 
