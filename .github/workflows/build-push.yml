@@ -107,10 +107,20 @@ jobs:
         uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # v0.35.0
         with:
           image-ref: ${{ env.IMAGE_PREFIX }}/${{ matrix.image.name }}:preflight
+          format: 'table'
+          severity: 'CRITICAL,HIGH'
+          exit-code: '1'
+          ignore-unfixed: true
+          trivyignores: '.trivyignore'
+
+      - name: "Trivy: generate SARIF"
+        if: always()
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # v0.35.0
+        with:
+          image-ref: ${{ env.IMAGE_PREFIX }}/${{ matrix.image.name }}:preflight
           format: 'sarif'
           output: 'trivy-${{ matrix.image.name }}.sarif'
           severity: 'CRITICAL,HIGH'
-          exit-code: '1'
           ignore-unfixed: true
           trivyignores: '.trivyignore'
 

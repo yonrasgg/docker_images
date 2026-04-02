@@ -47,18 +47,29 @@ RUN apk update && apk upgrade && \
       su-exec \
       tini \
       tzdata && \
-    rm -rf /var/cache/apk/*
+    rm -rf /var/cache/apk/* && \
+    # Remove Python (shipped by node:20-alpine for node-gyp builds) —
+    # not needed at Dashy runtime and contains flagged cryptography CVE
+    rm -rf /usr/lib/python* /usr/local/lib/python* \
+           /usr/bin/python* /usr/local/bin/python* \
+           /usr/lib/libpython* /usr/local/lib/libpython* \
+           /usr/include/python* /usr/local/include/python*
 
 # Apply hardening
 COPY shared/hardening.sh /tmp/hardening.sh
 RUN chmod +x /tmp/hardening.sh && /tmp/hardening.sh && rm /tmp/hardening.sh
 
-# Create non-root user
-RUN addgroup -g 1000 media && \
+# Create non-root user (remove node user/group from base image first)
+RUN deluser --remove-home node 2>/dev/null || true && \
+    delgroup node 2>/dev/null || true && \
+    addgroup -g 1000 media && \
     adduser -u 1000 -G media -h /app -s /sbin/nologin -D media
 
 # Copy built application from builder
 COPY --from=builder /app /app
+
+# Dashy defaults to port 4000; override to match EXPOSE
+ENV PORT=8080
 
 RUN mkdir -p /app/user-data && \
     chown -R media:media /app

@@ -25,15 +25,20 @@ RUN set -eux; \
       "https://github.com/sabnzbd/sabnzbd/releases/download/${SABNZBD_VERSION}/SABnzbd-${SABNZBD_VERSION}-src.tar.gz"; \
     mkdir -p /opt/sabnzbd; \
     tar -xzf /tmp/sabnzbd.tar.gz -C /opt/sabnzbd --strip-components=1; \
-    rm -f /tmp/sabnzbd.tar.gz
+    rm -f /tmp/sabnzbd.tar.gz; \
+    # Remove Node.js frontend tooling files (not needed at Python runtime,
+    # and they contain transitive CVEs that Trivy flags as false positives)
+    rm -rf /opt/sabnzbd/package.json /opt/sabnzbd/package-lock.json \
+           /opt/sabnzbd/node_modules /opt/sabnzbd/yarn.lock \
+           /opt/sabnzbd/.npm /opt/sabnzbd/Gruntfile.js /opt/sabnzbd/gulpfile.js
 
 # Install Python dependencies (upgrade pip first for security patches)
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir --prefix=/install \
       -r /opt/sabnzbd/requirements.txt && \
-    pip install --no-cache-dir --prefix=/install --upgrade \
+    pip install --no-cache-dir --prefix=/install --force-reinstall --no-deps \
       "requests>=2.33.0" \
-      "cryptography>=46.0.6"
+      "cryptography>=46.0.5"
 
 # --- Stage 2: Runtime ---
 FROM ${PYTHON_IMAGE}
@@ -74,6 +79,10 @@ RUN groupadd -g 1000 media && \
 # Copy Python packages and application
 COPY --from=builder /install /usr/local
 COPY --from=builder /opt/sabnzbd /opt/sabnzbd
+
+# Remove any Node.js frontend tooling that survived the build (defense-in-depth)
+RUN find /opt/sabnzbd /usr/local \( -name "package.json" -o -name "package-lock.json" \
+      -o -name "yarn.lock" -o -name "node_modules" \) -exec rm -rf {} + 2>/dev/null || true
 
 RUN mkdir -p /config /downloads /incomplete-downloads && \
     chown -R media:media /opt/sabnzbd /config /downloads /incomplete-downloads
