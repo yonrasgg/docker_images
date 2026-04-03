@@ -10,6 +10,13 @@
 # regardless of this file.
 #
 # Last reviewed: 2026-04-03
+#
+# Remediated (2026-04-03):
+#   - gosu 1.14→1.19: All 30+ Go stdlib CVEs eliminated (5 Debian images)
+#   - p7zip-full→7zip: 5 HIGH CVEs eliminated (sabnzbd)
+#   - npm/yarn/corepack stripped from runtime: ~15 HIGH CVEs eliminated (dashy)
+#   - Python deps force-upgraded: urllib3≥2.6.3, ujson≥5.12.0, pyjwt≥2.12.0,
+#     orjson≥3.11.6, cryptography≥46.0.5 (sabnzbd)
 # =============================================================================
 
 # --- Sonarr / Radarr .NET transitive dependencies ---
@@ -35,35 +42,12 @@ CVE-2026-26130
 CVE-2024-21319
 
 # --- SABnzbd Python transitive dependencies ---
-
-# PyJWT 2.10.1 → fix in 2.12.0 (installed by sabnzbd requirements.txt)
-# Accepts unknown crit header extensions — low risk in container context
-CVE-2026-32597
-
-# orjson 3.11.3 → fix in 3.11.6 (installed by sabnzbd requirements.txt)
-# DoS via unbounded recursion — low risk, only processes trusted NZB payloads
-CVE-2025-67221
-
-# ujson 5.11.0 → fix in 5.12.0 (installed by sabnzbd requirements.txt)
-# DoS via memory leak + large indent — low risk, internal JSON processing only
-CVE-2026-32874
-CVE-2026-32875
-
-# urllib3 2.5.0 → fix in 2.6.0 (installed by sabnzbd requirements.txt)
-# Unbounded decompression chain + streaming API issue — medium risk, mitigated by tini+healthcheck
-CVE-2025-66418
-CVE-2025-66471
-
-# urllib3 2.5.0 → fix in 2.6.3 (installed by sabnzbd requirements.txt)
-# Decompression-bomb safeguard bypass — medium risk, internal downloads only
-CVE-2026-21441
-
-# cryptography 46.0.3 → fix in 46.0.5 (installed by sabnzbd requirements.txt)
-# Subgroup attack due to missing validation — medium risk, used for HTTPS downloads only,
-# not processing untrusted cryptographic input; upgrade attempted via --force-reinstall
-# but GHA layer cache may serve stale version until cache expires
-# Review: 2026-05-01
-CVE-2026-26007
+# NOTE: urllib3, ujson, pyjwt, orjson, and cryptography CVEs REMOVED 2026-04-03
+# after force-upgrading these packages in the builder stage Dockerfile.
+# The following were eliminated:
+#   CVE-2026-32597 (pyjwt), CVE-2025-67221 (orjson),
+#   CVE-2026-32874/32875 (ujson), CVE-2025-66418/66471/CVE-2026-21441 (urllib3),
+#   CVE-2026-26007 (cryptography)
 
 # --- Dashy Node.js transitive dependencies ---
 # These are upstream Dashy application dependencies pinned by yarn.lock.

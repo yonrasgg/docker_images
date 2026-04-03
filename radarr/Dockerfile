@@ -50,7 +50,6 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends \
       ca-certificates \
       curl \
-      gosu \
       libicu72 \
       libsqlite3-0 \
       libssl3 \
@@ -59,6 +58,19 @@ RUN apt-get update && \
       tzdata && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/* /tmp/* /var/tmp/*
+
+# Download gosu from upstream — Debian packages gosu 1.14 compiled with Go 1.19,
+# which embeds 30+ known Go stdlib CVEs. Using upstream binary (Go 1.24+) resolves all.
+ARG GOSU_VERSION=1.19
+RUN set -eux; \
+    dpkgArch="$(dpkg --print-architecture)"; \
+    curl -fsSL -o /usr/sbin/gosu "https://github.com/tianon/gosu/releases/download/${GOSU_VERSION}/gosu-${dpkgArch}"; \
+    curl -fsSL -o /tmp/gosu.sha256 "https://github.com/tianon/gosu/releases/download/${GOSU_VERSION}/SHA256SUMS"; \
+    grep "gosu-${dpkgArch}$" /tmp/gosu.sha256 | sed "s|gosu-${dpkgArch}|/usr/sbin/gosu|" | sha256sum -c -; \
+    rm -f /tmp/gosu.sha256; \
+    chmod +x /usr/sbin/gosu; \
+    gosu --version; \
+    gosu nobody true
 
 COPY shared/hardening.sh /tmp/hardening.sh
 RUN chmod +x /tmp/hardening.sh && /tmp/hardening.sh && rm /tmp/hardening.sh

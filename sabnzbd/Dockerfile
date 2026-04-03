@@ -38,7 +38,11 @@ RUN pip install --no-cache-dir --upgrade pip && \
       -r /opt/sabnzbd/requirements.txt && \
     pip install --no-cache-dir --prefix=/install --force-reinstall --no-deps \
       "requests>=2.33.0" \
-      "cryptography>=46.0.5"
+      "cryptography>=46.0.5" \
+      "urllib3>=2.6.3" \
+      "ujson>=5.12.0" \
+      "pyjwt>=2.12.0" \
+      "orjson>=3.11.6"
 
 # --- Stage 2: Runtime ---
 FROM ${PYTHON_IMAGE}
@@ -54,19 +58,38 @@ LABEL maintainer="yonrasgg" \
       org.opencontainers.image.vendor="yonrasgg"
 
 # Install runtime dependencies and apply all available security patches
+# Replace p7zip-full with 7zip — p7zip is unmaintained upstream with 5+ HIGH CVEs
+# (CVE-2023-31102, CVE-2023-40481, CVE-2023-52168, CVE-2025-11001, CVE-2025-11002).
+# 7zip (22.01+dfsg-8+deb12u1) is actively maintained and security-patched in bookworm.
 RUN apt-get update && \
     apt-get upgrade -y && \
     apt-get install -y --no-install-recommends \
+      7zip \
       ca-certificates \
       curl \
-      gosu \
       par2 \
-      p7zip-full \
       tini \
       tzdata \
       unrar-free && \
     apt-get clean && \
-    rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/* /tmp/* /var/tmp/*
+    rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/* /tmp/* /var/tmp/* && \
+    # SABnzbd expects '7za' or '7z' binary; Debian 7zip package provides '7zz'.
+    # Create backwards-compatible symlinks for SABnzbd auto-detection.
+    ln -sf /usr/bin/7zz /usr/bin/7z && \
+    ln -sf /usr/bin/7zz /usr/bin/7za
+
+# Download gosu from upstream — Debian packages gosu 1.14 compiled with Go 1.19,
+# which embeds 30+ known Go stdlib CVEs. Using upstream binary (Go 1.24+) resolves all.
+ARG GOSU_VERSION=1.19
+RUN set -eux; \
+    dpkgArch="$(dpkg --print-architecture)"; \
+    curl -fsSL -o /usr/sbin/gosu "https://github.com/tianon/gosu/releases/download/${GOSU_VERSION}/gosu-${dpkgArch}"; \
+    curl -fsSL -o /tmp/gosu.sha256 "https://github.com/tianon/gosu/releases/download/${GOSU_VERSION}/SHA256SUMS"; \
+    grep "gosu-${dpkgArch}$" /tmp/gosu.sha256 | sed "s|gosu-${dpkgArch}|/usr/sbin/gosu|" | sha256sum -c -; \
+    rm -f /tmp/gosu.sha256; \
+    chmod +x /usr/sbin/gosu; \
+    gosu --version; \
+    gosu nobody true
 
 # Apply hardening
 COPY shared/hardening.sh /tmp/hardening.sh
