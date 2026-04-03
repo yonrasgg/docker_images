@@ -175,8 +175,8 @@ jobs:
             health_path: /rest/noauth/health
             timeout: 60
           - name: caddy
-            port: 2019
-            health_path: /config/
+            port: 80
+            health_path: /
             timeout: 60
     env:
       IMAGE_TAG: "ci-gate/${{ matrix.image.name }}:${{ github.sha }}"
