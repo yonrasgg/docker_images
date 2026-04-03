@@ -12,6 +12,8 @@ Only the `latest` tag of each image receives security updates. All images are re
 | jackett | ✅ latest  |
 | plex    | ✅ latest  |
 | dashy   | ✅ latest  |
+| wireguard-ui | ✅ latest |
+| syncthing | ✅ latest |
 
 ## Supply Chain Security
 

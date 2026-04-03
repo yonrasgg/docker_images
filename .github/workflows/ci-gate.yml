@@ -17,6 +17,8 @@ on:
       - 'jackett/**'
       - 'plex/**'
       - 'dashy/**'
+      - 'wireguard-ui/**'
+      - 'syncthing/**'
       - 'shared/**'
       - '.github/workflows/ci-gate.yml'
       - '.hadolint.yaml'
@@ -37,7 +39,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        image: [sonarr, radarr, sabnzbd, jackett, plex, dashy]
+        image: [sonarr, radarr, sabnzbd, jackett, plex, dashy, wireguard-ui, syncthing]
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - uses: hadolint/hadolint-action@2332a7b74a6de0dda2e2221d575162eba76ba5e5 # v3.3.0
@@ -71,7 +73,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        image: [sonarr, radarr, sabnzbd, jackett, plex, dashy]
+        image: [sonarr, radarr, sabnzbd, jackett, plex, dashy, wireguard-ui, syncthing]
     env:
       IMAGE_TAG: "ci-gate/${{ matrix.image }}:${{ github.sha }}"
     steps:
@@ -163,6 +165,14 @@ jobs:
             port: 8080
             health_path: /
             timeout: 120
+          - name: wireguard-ui
+            port: 5000
+            health_path: /
+            timeout: 60
+          - name: syncthing
+            port: 8384
+            health_path: /rest/noauth/health
+            timeout: 60
     env:
       IMAGE_TAG: "ci-gate/${{ matrix.image.name }}:${{ github.sha }}"
     steps:
