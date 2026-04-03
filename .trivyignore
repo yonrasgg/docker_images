@@ -152,6 +152,58 @@ CVE-2026-25679
 # gosu never uses database/sql
 CVE-2025-47907
 
+# os — FileInfo can escape from a Root (fixed in Go 1.25.8, 1.26.1)
+# gosu never uses os.Root filesystem sandboxing
+CVE-2026-27139
+
+# html/template — URL escaping in meta content attributes (fixed in Go 1.25.8, 1.26.1)
+# gosu never renders HTML templates
+CVE-2026-27142
+
+# crypto/tls — TLS 1.3 handshake multiple messages DoS (fixed in Go 1.24.12)
+# gosu never makes or accepts TLS connections
+CVE-2025-61730
+
+# crypto/x509 — wildcard SAN constraint bypass (fixed in Go 1.24.12)
+# gosu never validates X.509 certificates
+CVE-2025-61727
+
+# net/mail — excessive CPU in ParseAddress (fixed in Go 1.24.12)
+# gosu never parses email addresses
+CVE-2025-61725
+
+# net/textproto — excessive CPU in ReadResponse (fixed in Go 1.24.12)
+# gosu never reads textproto responses
+CVE-2025-61724
+
+# encoding/pem — quadratic complexity on invalid input (fixed in Go 1.24.12)
+# gosu never parses PEM data
+CVE-2025-61723
+
+# crypto/tls — ALPN negotiation error leaks attacker data (fixed in Go 1.24.8)
+# gosu never makes or accepts TLS connections
+CVE-2025-58189
+
+# crypto/x509 — panic on DSA public keys (fixed in Go 1.24.8)
+# gosu never parses X.509 certificates
+CVE-2025-58188
+
+# crypto/x509 — quadratic complexity in name constraints (fixed in Go 1.24.8)
+# gosu never parses X.509 certificates
+CVE-2025-58187
+
+# net/http — cookie parsing memory exhaustion (fixed in Go 1.24.8)
+# gosu never handles HTTP requests
+CVE-2025-58186
+
+# encoding/asn1 — DER parsing memory exhaustion (fixed in Go 1.24.8)
+# gosu never parses ASN.1/DER data
+CVE-2025-58185
+
+# net/url — insufficient IPv6 hostname validation (fixed in Go 1.25.0)
+# gosu never parses URLs
+CVE-2025-47912
+
 # --- Caddy v2.11.2 transitive dependency CVEs ---
 # Caddy v2.11.2 pulls smallstep/certificates v0.30.0-rc3 (the RC of the
 # fix version v0.30.0). The final release patches these CVEs but Caddy
@@ -181,14 +233,46 @@ CVE-2024-45337
 # Same: WireGuard UI never handles SSH connections
 CVE-2025-22869
 
-# --- Syncthing v2.0.15 Go stdlib CVE ---
+# golang.org/x/net/html — input neutralization (XSS)
+# WireGuard UI does not use x/net/html for untrusted content rendering
+CVE-2025-22872
+
+# golang.org/x/net/proxy — HTTP proxy bypass via IPv6 zone ID
+# WireGuard UI does not proxy HTTP requests through x/net/proxy
+CVE-2025-22870
+
+# net/http — CONTINUATION frame DoS (affects Go <1.22.9)
+# WireGuard UI runs behind a reverse proxy; internal HTTP not internet-exposed
+CVE-2023-45288
+
+# golang.org/x/crypto/ssh — GSSAPI authentication DoS via unbounded memory
+# WireGuard UI never uses SSH/GSSAPI authentication
+CVE-2025-58181
+
+# golang.org/x/crypto/ssh/agent — DoS via malformed messages
+# WireGuard UI never acts as an SSH agent
+CVE-2025-47914
+
+# --- Syncthing v2.0.15 Go stdlib CVEs ---
 # Syncthing v2.0.15 is built with Go 1.26.0; the fix requires Go 1.26.1.
 # Pre-built binary — we cannot control the compiler version.
-# crypto/x509 email constraint enforcement — low risk, Syncthing uses its
-# own self-signed TLS certificates for device authentication, not email-based
-# X.509 constraints. Home-network file sync context.
 # Review: 2026-05-01
+
+# crypto/x509 — email constraint enforcement (fixed in Go 1.26.1)
+# Syncthing uses self-signed TLS certs for device auth, not email-based X.509
 CVE-2026-27137
+
+# crypto/x509 — panic on malformed certificates (fixed in Go 1.26.1)
+# Low risk, Syncthing only connects to trusted devices via relay/direct
+CVE-2026-27138
+
+# os — FileInfo can escape from a Root (fixed in Go 1.25.8, 1.26.1)
+# Syncthing does use filesystem operations but os.Root is not used in its codebase
+CVE-2026-27139
+
+# html/template — URL escaping in meta content attributes (fixed in Go 1.25.8, 1.26.1)
+# Syncthing's GUI uses html/template but is only accessible on localhost
+CVE-2026-27142
 
 # --- Caddy v2.11.2 transitive dependency CVE ---
 # Caddy v2.11.2 pins google.golang.org/grpc v1.79.1; fix requires v1.79.3.
