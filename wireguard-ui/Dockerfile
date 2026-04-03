@@ -8,7 +8,7 @@
 # capabilities the UI operates in config-generation-only mode.
 # =============================================================================
 
-ARG GO_IMAGE=golang:1.22-alpine
+ARG GO_IMAGE=golang:1.26-alpine
 ARG ALPINE_IMAGE=alpine:3.21
 
 # --- Stage 1: Compile from source ---
@@ -22,6 +22,7 @@ RUN apk add --no-cache git build-base
 
 RUN git clone --branch "${WG_UI_VERSION}" --depth 1 \
       https://github.com/ngoduykhanh/wireguard-ui.git . && \
+    go get golang.org/x/crypto@latest && go mod tidy && \
     CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o /wireguard-ui
 
 # --- Stage 2: Hardened Runtime ---
@@ -61,7 +62,7 @@ COPY --from=builder /wireguard-ui /usr/local/bin/wireguard-ui
 
 # Create data and WireGuard config directories
 RUN mkdir -p /data /etc/wireguard && \
-    chown -R media:media /data
+    chown -R media:media /data /etc/wireguard
 
 COPY wireguard-ui/entrypoint.sh /entrypoint.sh
 RUN chmod 755 /entrypoint.sh

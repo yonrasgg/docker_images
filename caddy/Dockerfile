@@ -5,13 +5,13 @@
 # https://github.com/yonrasgg/docker_images
 # =============================================================================
 
-ARG GO_IMAGE=golang:1.24-alpine
+ARG GO_IMAGE=golang:1.26-alpine
 ARG ALPINE_IMAGE=alpine:3.21
 
 # --- Stage 1: Build Caddy from source with xcaddy ---
 FROM ${GO_IMAGE} AS builder
 
-ARG CADDY_VERSION=v2.9.1
+ARG CADDY_VERSION=v2.11.2
 # Add xcaddy plugins as build args for easy customization
 ARG CADDY_PLUGINS=""
 
@@ -27,20 +27,18 @@ RUN apk add --no-cache git
 RUN go install github.com/caddyserver/xcaddy/cmd/xcaddy@v0.4.4
 
 # Build a minimal, statically-linked Caddy binary.
+# Uses set -- to accumulate args safely (no eval/string injection).
 # - nobadger,nomysql,nopgx: disable unused storage backends
 # - netgo,osusergo: pure-Go networking and user lookup (no CGO)
 # - -s -w: strip debug symbols and DWARF info
 # - -trimpath: remove local filesystem paths from binary
 # hadolint ignore=DL4006
 RUN set -eu; \
-    XCADDY_CMD="xcaddy build ${CADDY_VERSION}"; \
-    if [ -n "${CADDY_PLUGINS}" ]; then \
-      for plugin in ${CADDY_PLUGINS}; do \
-        XCADDY_CMD="${XCADDY_CMD} --with ${plugin}"; \
-      done; \
-    fi; \
-    eval "${XCADDY_CMD}" \
-      --output /build/caddy && \
+    set -- xcaddy build "${CADDY_VERSION}"; \
+    for plugin in ${CADDY_PLUGINS}; do \
+      set -- "$@" --with "${plugin}"; \
+    done; \
+    "$@" --output /build/caddy && \
     chmod +x /build/caddy && \
     /build/caddy version
 
@@ -88,6 +86,11 @@ RUN setcap cap_net_bind_service=+ep /usr/bin/caddy
 # /etc/caddy: user-provided Caddyfile mount point
 RUN mkdir -p /data /config /etc/caddy && \
     chown -R media:media /data /config /etc/caddy
+
+# Ship a minimal default Caddyfile so the container starts without a mount.
+# Users override by mounting their own config at /etc/caddy/Caddyfile.
+COPY caddy/Caddyfile /etc/caddy/Caddyfile
+RUN chown media:media /etc/caddy/Caddyfile
 
 COPY caddy/entrypoint.sh /entrypoint.sh
 RUN chmod 755 /entrypoint.sh

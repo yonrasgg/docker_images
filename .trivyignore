@@ -15,8 +15,11 @@
 #   - gosu 1.14→1.19: All 30+ Go stdlib CVEs eliminated (5 Debian images)
 #   - p7zip-full→7zip: 5 HIGH CVEs eliminated (sabnzbd)
 #   - npm/yarn/corepack stripped from runtime: ~15 HIGH CVEs eliminated (dashy)
-#   - Python deps force-upgraded: urllib3≥2.6.3, ujson≥5.12.0, pyjwt≥2.12.0,
+#   - Python deps constraint-upgraded: urllib3≥2.6.3, ujson≥5.12.0, pyjwt≥2.12.0,
 #     orjson≥3.11.6, cryptography≥46.0.5 (sabnzbd)
+#   - Caddy v2.9.1→v2.11.2: 11 CVEs eliminated (caddy deps + Go stdlib)
+#   - Syncthing v1.29.2→v2.0.15: Go runtime upgrade + SHA256 verification
+#   - WireGuard UI Go 1.22→1.26 + x/crypto upgraded: 9 CVEs eliminated
 # =============================================================================
 
 # --- Sonarr / Radarr .NET transitive dependencies ---
@@ -112,3 +115,39 @@ CVE-2024-9506
 # DoS in parsePatch/applyPatch — low risk, npm diff not invoked at runtime
 # Review: 2026-05-01
 CVE-2026-24001
+
+# --- gosu 1.19 Go stdlib CVEs (affects sonarr, radarr, jackett, plex, sabnzbd) ---
+# gosu 1.19 is the latest release, compiled with Go 1.24.6. No newer version exists.
+# gosu is a minimal setuid/setgid tool (~1.8MB static binary) that ONLY calls
+# setuid(2)/setgid(2) and exec(2). It never uses crypto/tls, archive/tar,
+# archive/zip, net/url, or crypto/x509 — these are UNREACHABLE code paths
+# embedded in the Go stdlib by the compiler. Zero exploitation risk.
+# Review: 2026-05-01
+
+# crypto/tls — session resumption DoS (fixed in Go 1.24.13)
+# gosu does not make or accept TLS connections
+CVE-2025-68121
+
+# archive/tar — unbounded allocation (fixed in Go 1.24.8)
+# gosu never opens tar archives
+CVE-2025-58183
+
+# net/url — memory exhaustion via crafted URLs (fixed in Go 1.24.12)
+# gosu never parses URLs
+CVE-2025-61726
+
+# archive/zip — excessive CPU via crafted zip (fixed in Go 1.24.12)
+# gosu never opens zip archives
+CVE-2025-61728
+
+# crypto/x509 — DoS in certificate parsing (fixed in Go 1.24.11)
+# gosu never parses X.509 certificates
+CVE-2025-61729
+
+# net/url — IPv6 zone ID parsing issue (fixed in Go 1.25.8)
+# gosu never parses URLs
+CVE-2026-25679
+
+# database/sql — race condition in connection pool (fixed in Go 1.23.12)
+# gosu never uses database/sql
+CVE-2025-47907

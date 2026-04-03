@@ -16,7 +16,7 @@ if [ "$PUID" != "1000" ]; then
 fi
 
 # --- Fix ownership (volumes only) ---
-chown media:media /data
+chown media:media /data /etc/wireguard
 
 # --- Set umask ---
 umask "$UMASK"

@@ -15,7 +15,9 @@ if [ "$PUID" != "1000" ]; then
 fi
 
 # --- Fix ownership (volumes only) ---
-chown media:media /data /config /etc/caddy
+chown media:media /data /config
+# /etc/caddy may be a read-only bind mount; best-effort chown
+chown media:media /etc/caddy 2>/dev/null || true
 
 # --- Set umask ---
 umask "$UMASK"

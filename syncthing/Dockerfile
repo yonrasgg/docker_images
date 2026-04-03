@@ -10,16 +10,22 @@ ARG ALPINE_IMAGE=alpine:3.21
 FROM ${ALPINE_IMAGE} AS downloader
 
 ARG TARGETARCH
-ARG SYNCTHING_VERSION=v1.29.2
+ARG SYNCTHING_VERSION=v2.0.15
 
 RUN apk add --no-cache curl ca-certificates
 
+# Download pre-built binary and verify SHA256 checksum
 RUN set -eux; \
     curl -fsSL -o /tmp/syncthing.tar.gz \
       "https://github.com/syncthing/syncthing/releases/download/${SYNCTHING_VERSION}/syncthing-linux-${TARGETARCH}-${SYNCTHING_VERSION}.tar.gz"; \
+    curl -fsSL -o /tmp/sha256sum.txt \
+      "https://github.com/syncthing/syncthing/releases/download/${SYNCTHING_VERSION}/sha256sum.txt"; \
+    grep "syncthing-linux-${TARGETARCH}-${SYNCTHING_VERSION}.tar.gz" /tmp/sha256sum.txt \
+      | sed "s|syncthing-linux-${TARGETARCH}-${SYNCTHING_VERSION}.tar.gz|/tmp/syncthing.tar.gz|" \
+      | sha256sum -c -; \
     mkdir -p /opt/syncthing; \
     tar -xzf /tmp/syncthing.tar.gz -C /opt/syncthing --strip-components=1; \
-    rm -f /tmp/syncthing.tar.gz
+    rm -f /tmp/syncthing.tar.gz /tmp/sha256sum.txt
 
 # --- Stage 2: Hardened Runtime ---
 FROM ${ALPINE_IMAGE}
