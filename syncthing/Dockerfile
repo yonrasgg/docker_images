@@ -15,18 +15,21 @@ ARG SYNCTHING_VERSION=v2.0.15
 RUN apk add --no-cache curl ca-certificates
 
 # Download pre-built binary and verify SHA256 checksum
+# Syncthing publishes a PGP-signed sha256sum.txt.asc; we strip the
+# PGP envelope and verify the hash for our architecture's tarball.
 # hadolint ignore=DL4006
 RUN set -eux; \
     curl -fsSL -o /tmp/syncthing.tar.gz \
       "https://github.com/syncthing/syncthing/releases/download/${SYNCTHING_VERSION}/syncthing-linux-${TARGETARCH}-${SYNCTHING_VERSION}.tar.gz"; \
-    curl -fsSL -o /tmp/sha256sum.txt \
-      "https://github.com/syncthing/syncthing/releases/download/${SYNCTHING_VERSION}/sha256sum.txt"; \
-    grep "syncthing-linux-${TARGETARCH}-${SYNCTHING_VERSION}.tar.gz" /tmp/sha256sum.txt \
+    curl -fsSL -o /tmp/sha256sum.txt.asc \
+      "https://github.com/syncthing/syncthing/releases/download/${SYNCTHING_VERSION}/sha256sum.txt.asc"; \
+    sed -n '/^[a-f0-9]\{64\} /p' /tmp/sha256sum.txt.asc \
+      | grep "syncthing-linux-${TARGETARCH}-${SYNCTHING_VERSION}.tar.gz" \
       | sed "s|syncthing-linux-${TARGETARCH}-${SYNCTHING_VERSION}.tar.gz|/tmp/syncthing.tar.gz|" \
       | sha256sum -c -; \
     mkdir -p /opt/syncthing; \
     tar -xzf /tmp/syncthing.tar.gz -C /opt/syncthing --strip-components=1; \
-    rm -f /tmp/syncthing.tar.gz /tmp/sha256sum.txt
+    rm -f /tmp/syncthing.tar.gz /tmp/sha256sum.txt.asc
 
 # --- Stage 2: Hardened Runtime ---
 FROM ${ALPINE_IMAGE}

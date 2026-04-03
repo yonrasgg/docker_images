@@ -151,3 +151,32 @@ CVE-2026-25679
 # database/sql — race condition in connection pool (fixed in Go 1.23.12)
 # gosu never uses database/sql
 CVE-2025-47907
+
+# --- Caddy v2.11.2 transitive dependency CVEs ---
+# Caddy v2.11.2 pulls smallstep/certificates v0.30.0-rc3 (the RC of the
+# fix version v0.30.0). The final release patches these CVEs but Caddy
+# hasn't updated its go.mod yet. These affect the Step CA ACME provisioner;
+# our Caddy image is used as a reverse proxy in a home network, not as a
+# public certificate authority. Zero exploitation risk in this context.
+# Review: 2026-05-01
+
+# smallstep/certificates — unauthenticated ACME provisioner access
+CVE-2026-30836
+
+# smallstep/certificates — ACME provisioner privilege escalation
+CVE-2025-44005
+
+# --- WireGuard UI v0.6.2 Go dependency CVEs ---
+# WireGuard UI v0.6.2 (last release Oct 2023) pins golang.org/x/crypto
+# v0.17.0. Updating causes cascading dependency breakage (wireguard
+# module API changes). These CVEs affect the x/crypto/ssh package;
+# WireGuard UI is a web application that never uses SSH functionality.
+# Review: 2026-05-01
+
+# golang.org/x/crypto/ssh — PublicKeyCallback misuse
+# Only affects code using SSH server/client auth; WireGuard UI is HTTP-only
+CVE-2024-45337
+
+# golang.org/x/crypto/ssh — DoS via SSH banner
+# Same: WireGuard UI never handles SSH connections
+CVE-2025-22869

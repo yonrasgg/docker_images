@@ -33,20 +33,20 @@ RUN set -eux; \
            /opt/sabnzbd/.npm /opt/sabnzbd/Gruntfile.js /opt/sabnzbd/gulpfile.js
 
 # Install Python dependencies (upgrade pip first for security patches)
-# Security-override constraints ensure vulnerable transitive packages
-# are installed at patched versions from the start (single pip resolve).
+# SABnzbd's requirements.txt pins exact versions that may have known CVEs.
+# We loosen those pins to allow patched releases before installing.
 RUN pip install --no-cache-dir --upgrade pip && \
-    printf '%s\n' \
-      'cryptography>=46.0.5' \
-      'orjson>=3.11.6' \
-      'pyjwt>=2.12.0' \
-      'requests>=2.33.0' \
-      'ujson>=5.12.0' \
-      'urllib3>=2.6.3' > /tmp/security-constraints.txt && \
+    sed -i \
+      -e 's/^cryptography[=<>~!].*/cryptography>=46.0.5/' \
+      -e 's/^orjson[=<>~!].*/orjson>=3.11.6/' \
+      -e 's/^PyJWT[=<>~!].*/PyJWT>=2.12.0/' \
+      -e 's/^pyjwt[=<>~!].*/pyjwt>=2.12.0/' \
+      -e 's/^requests[=<>~!].*/requests>=2.33.0/' \
+      -e 's/^ujson[=<>~!].*/ujson>=5.12.0/' \
+      -e 's/^urllib3[=<>~!].*/urllib3>=2.6.3/' \
+      /opt/sabnzbd/requirements.txt && \
     pip install --no-cache-dir --prefix=/install \
-      -c /tmp/security-constraints.txt \
-      -r /opt/sabnzbd/requirements.txt && \
-    rm -f /tmp/security-constraints.txt
+      -r /opt/sabnzbd/requirements.txt
 
 # --- Stage 2: Runtime ---
 FROM ${PYTHON_IMAGE}
