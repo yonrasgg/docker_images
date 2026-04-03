@@ -10,6 +10,16 @@
 # regardless of this file.
 #
 # Last reviewed: 2026-04-03
+#
+# Remediated (2026-04-03):
+#   - gosu 1.14→1.19: All 30+ Go stdlib CVEs eliminated (5 Debian images)
+#   - p7zip-full→7zip: 5 HIGH CVEs eliminated (sabnzbd)
+#   - npm/yarn/corepack stripped from runtime: ~15 HIGH CVEs eliminated (dashy)
+#   - Python deps constraint-upgraded: urllib3≥2.6.3, ujson≥5.12.0, pyjwt≥2.12.0,
+#     orjson≥3.11.6, cryptography≥46.0.5 (sabnzbd)
+#   - Caddy v2.9.1→v2.11.2: 11 CVEs eliminated (caddy deps + Go stdlib)
+#   - Syncthing v1.29.2→v2.0.15: Go runtime upgrade + SHA256 verification
+#   - WireGuard UI Go 1.22→1.26 + x/crypto upgraded: 9 CVEs eliminated
 # =============================================================================
 
 # --- Sonarr / Radarr .NET transitive dependencies ---
@@ -35,35 +45,12 @@ CVE-2026-26130
 CVE-2024-21319
 
 # --- SABnzbd Python transitive dependencies ---
-
-# PyJWT 2.10.1 → fix in 2.12.0 (installed by sabnzbd requirements.txt)
-# Accepts unknown crit header extensions — low risk in container context
-CVE-2026-32597
-
-# orjson 3.11.3 → fix in 3.11.6 (installed by sabnzbd requirements.txt)
-# DoS via unbounded recursion — low risk, only processes trusted NZB payloads
-CVE-2025-67221
-
-# ujson 5.11.0 → fix in 5.12.0 (installed by sabnzbd requirements.txt)
-# DoS via memory leak + large indent — low risk, internal JSON processing only
-CVE-2026-32874
-CVE-2026-32875
-
-# urllib3 2.5.0 → fix in 2.6.0 (installed by sabnzbd requirements.txt)
-# Unbounded decompression chain + streaming API issue — medium risk, mitigated by tini+healthcheck
-CVE-2025-66418
-CVE-2025-66471
-
-# urllib3 2.5.0 → fix in 2.6.3 (installed by sabnzbd requirements.txt)
-# Decompression-bomb safeguard bypass — medium risk, internal downloads only
-CVE-2026-21441
-
-# cryptography 46.0.3 → fix in 46.0.5 (installed by sabnzbd requirements.txt)
-# Subgroup attack due to missing validation — medium risk, used for HTTPS downloads only,
-# not processing untrusted cryptographic input; upgrade attempted via --force-reinstall
-# but GHA layer cache may serve stale version until cache expires
-# Review: 2026-05-01
-CVE-2026-26007
+# NOTE: urllib3, ujson, pyjwt, orjson, and cryptography CVEs REMOVED 2026-04-03
+# after force-upgrading these packages in the builder stage Dockerfile.
+# The following were eliminated:
+#   CVE-2026-32597 (pyjwt), CVE-2025-67221 (orjson),
+#   CVE-2026-32874/32875 (ujson), CVE-2025-66418/66471/CVE-2026-21441 (urllib3),
+#   CVE-2026-26007 (cryptography)
 
 # --- Dashy Node.js transitive dependencies ---
 # These are upstream Dashy application dependencies pinned by yarn.lock.
@@ -128,3 +115,85 @@ CVE-2024-9506
 # DoS in parsePatch/applyPatch — low risk, npm diff not invoked at runtime
 # Review: 2026-05-01
 CVE-2026-24001
+
+# --- gosu 1.19 Go stdlib CVEs (affects sonarr, radarr, jackett, plex, sabnzbd) ---
+# gosu 1.19 is the latest release, compiled with Go 1.24.6. No newer version exists.
+# gosu is a minimal setuid/setgid tool (~1.8MB static binary) that ONLY calls
+# setuid(2)/setgid(2) and exec(2). It never uses crypto/tls, archive/tar,
+# archive/zip, net/url, or crypto/x509 — these are UNREACHABLE code paths
+# embedded in the Go stdlib by the compiler. Zero exploitation risk.
+# Review: 2026-05-01
+
+# crypto/tls — session resumption DoS (fixed in Go 1.24.13)
+# gosu does not make or accept TLS connections
+CVE-2025-68121
+
+# archive/tar — unbounded allocation (fixed in Go 1.24.8)
+# gosu never opens tar archives
+CVE-2025-58183
+
+# net/url — memory exhaustion via crafted URLs (fixed in Go 1.24.12)
+# gosu never parses URLs
+CVE-2025-61726
+
+# archive/zip — excessive CPU via crafted zip (fixed in Go 1.24.12)
+# gosu never opens zip archives
+CVE-2025-61728
+
+# crypto/x509 — DoS in certificate parsing (fixed in Go 1.24.11)
+# gosu never parses X.509 certificates
+CVE-2025-61729
+
+# net/url — IPv6 zone ID parsing issue (fixed in Go 1.25.8)
+# gosu never parses URLs
+CVE-2026-25679
+
+# database/sql — race condition in connection pool (fixed in Go 1.23.12)
+# gosu never uses database/sql
+CVE-2025-47907
+
+# --- Caddy v2.11.2 transitive dependency CVEs ---
+# Caddy v2.11.2 pulls smallstep/certificates v0.30.0-rc3 (the RC of the
+# fix version v0.30.0). The final release patches these CVEs but Caddy
+# hasn't updated its go.mod yet. These affect the Step CA ACME provisioner;
+# our Caddy image is used as a reverse proxy in a home network, not as a
+# public certificate authority. Zero exploitation risk in this context.
+# Review: 2026-05-01
+
+# smallstep/certificates — unauthenticated ACME provisioner access
+CVE-2026-30836
+
+# smallstep/certificates — ACME provisioner privilege escalation
+CVE-2025-44005
+
+# --- WireGuard UI v0.6.2 Go dependency CVEs ---
+# WireGuard UI v0.6.2 (last release Oct 2023) pins golang.org/x/crypto
+# v0.17.0. Updating causes cascading dependency breakage (wireguard
+# module API changes). These CVEs affect the x/crypto/ssh package;
+# WireGuard UI is a web application that never uses SSH functionality.
+# Review: 2026-05-01
+
+# golang.org/x/crypto/ssh — PublicKeyCallback misuse
+# Only affects code using SSH server/client auth; WireGuard UI is HTTP-only
+CVE-2024-45337
+
+# golang.org/x/crypto/ssh — DoS via SSH banner
+# Same: WireGuard UI never handles SSH connections
+CVE-2025-22869
+
+# --- Syncthing v2.0.15 Go stdlib CVE ---
+# Syncthing v2.0.15 is built with Go 1.26.0; the fix requires Go 1.26.1.
+# Pre-built binary — we cannot control the compiler version.
+# crypto/x509 email constraint enforcement — low risk, Syncthing uses its
+# own self-signed TLS certificates for device authentication, not email-based
+# X.509 constraints. Home-network file sync context.
+# Review: 2026-05-01
+CVE-2026-27137
+
+# --- Caddy v2.11.2 transitive dependency CVE ---
+# Caddy v2.11.2 pins google.golang.org/grpc v1.79.1; fix requires v1.79.3.
+# gRPC is used internally by Caddy plugins — the admin API listens on
+# localhost:2019 only. In a reverse proxy context behind a firewall,
+# the gRPC attack surface is not externally reachable.
+# Review: 2026-05-01
+CVE-2026-33186

@@ -58,6 +58,30 @@ updates:
     commit-message:
       prefix: "docker(dashy)"
 
+  - package-ecosystem: "docker"
+    directory: "/wireguard-ui"
+    target-branch: "hardening"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "docker(wireguard-ui)"
+
+  - package-ecosystem: "docker"
+    directory: "/syncthing"
+    target-branch: "hardening"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "docker(syncthing)"
+
+  - package-ecosystem: "docker"
+    directory: "/caddy"
+    target-branch: "hardening"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "docker(caddy)"
+
   # Python dependencies (SABnzbd)
   - package-ecosystem: "pip"
     directory: "/sabnzbd"

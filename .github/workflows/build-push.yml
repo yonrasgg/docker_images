@@ -16,6 +16,9 @@ on:
       - 'jackett/**'
       - 'plex/**'
       - 'dashy/**'
+      - 'wireguard-ui/**'
+      - 'syncthing/**'
+      - 'caddy/**'
       - 'shared/**'
       - '.github/workflows/build-push.yml'
   schedule:
@@ -70,6 +73,18 @@ jobs:
             # instructions unsupported by QEMU user-mode). Re-enable arm64
             # when GitHub Actions offers native arm64 runners.
             platforms: linux/amd64
+          - name: wireguard-ui
+            context: .
+            dockerfile: wireguard-ui/Dockerfile
+            platforms: linux/amd64,linux/arm64
+          - name: syncthing
+            context: .
+            dockerfile: syncthing/Dockerfile
+            platforms: linux/amd64,linux/arm64
+          - name: caddy
+            context: .
+            dockerfile: caddy/Dockerfile
+            platforms: linux/amd64,linux/arm64
 
     steps:
       - name: Checkout repository

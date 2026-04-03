@@ -54,7 +54,16 @@ RUN apk update && apk upgrade && \
     rm -rf /usr/lib/python* /usr/local/lib/python* \
            /usr/bin/python* /usr/local/bin/python* \
            /usr/lib/libpython* /usr/local/lib/libpython* \
-           /usr/include/python* /usr/local/include/python*
+           /usr/include/python* /usr/local/include/python* && \
+    # Remove npm, npx, corepack, and yarn — only needed during build stage.
+    # These ship with 15+ HIGH CVEs in bundled deps (tar, minimatch, cross-spawn,
+    # glob, brace-expansion) that are NOT reachable at Dashy runtime.
+    rm -rf /usr/local/lib/node_modules/npm \
+           /usr/local/lib/node_modules/corepack \
+           /usr/local/lib/node_modules/yarn \
+           /usr/local/bin/npm /usr/local/bin/npx \
+           /usr/local/bin/corepack \
+           /usr/local/bin/yarn /usr/local/bin/yarnpkg
 
 # Apply hardening
 COPY shared/hardening.sh /tmp/hardening.sh

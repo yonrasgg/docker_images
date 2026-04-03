@@ -45,6 +45,22 @@
 !dashy/Dockerfile
 !dashy/entrypoint.sh
 
+# WireGuard UI
+!wireguard-ui/
+!wireguard-ui/Dockerfile
+!wireguard-ui/entrypoint.sh
+
+# Syncthing
+!syncthing/
+!syncthing/Dockerfile
+!syncthing/entrypoint.sh
+
+# Caddy
+!caddy/
+!caddy/Dockerfile
+!caddy/entrypoint.sh
+!caddy/Caddyfile
+
 # ---- DENY: Anything that sneaks into allowed directories ----
 # Even inside allowed dirs, block sensitive patterns as defense-in-depth
 **/.env

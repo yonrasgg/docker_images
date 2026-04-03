@@ -29,8 +29,13 @@ All Dockerfiles reference `shared/hardening.sh` via `COPY`, so builds must run f
 # Build a specific image (Debian-based)
 docker build -f sonarr/Dockerfile -t sonarr:dev .
 
-# Build a specific image (Alpine-based)
+# Build a specific image (Alpine Node.js)
 docker build -f dashy/Dockerfile -t dashy:dev .
+
+# Build a specific image (Alpine Go)
+docker build -f wireguard-ui/Dockerfile -t wireguard-ui:dev .
+docker build -f syncthing/Dockerfile -t syncthing:dev .
+docker build -f caddy/Dockerfile -t caddy:dev .
 
 # Build for a specific architecture
 docker buildx build -f sonarr/Dockerfile --platform linux/arm64 -t sonarr:dev-arm64 .
@@ -59,8 +64,11 @@ shellcheck sonarr/entrypoint.sh shared/hardening.sh shared/strip.sh
 
 1. Create a directory: `<image-name>/`
 2. Add `Dockerfile` following the existing patterns:
-   - Multi-stage build (downloader + runtime)
-   - Use `debian:bookworm-slim` as base for .NET/media apps, or `node:20-alpine` for Node.js apps (see [Architecture Decisions](README.md#architecture-decisions))
+   - Multi-stage build (builder + runtime)
+   - **Debian `bookworm-slim`**: for .NET/media apps (sonarr, radarr, jackett, plex) or Python (sabnzbd)
+   - **Alpine `node:20-alpine`**: for pure Node.js apps (dashy)
+   - **Alpine `alpine:3.21`**: for statically-compiled Go binaries (wireguard-ui, syncthing, caddy)
+   - See [Architecture Decisions](README.md#architecture-decisions) for rationale
    - Apply `shared/hardening.sh` for security hardening
    - Apply `shared/strip.sh` as the final build step (after user creation)
    - Non-root user via `gosu` (Debian) or `su-exec` (Alpine)
@@ -68,10 +76,16 @@ shellcheck sonarr/entrypoint.sh shared/hardening.sh shared/strip.sh
    - `HEALTHCHECK` directive
    - OCI labels (`org.opencontainers.image.*`)
 3. Add `entrypoint.sh` with PUID/PGID support
-4. Add the image to `.github/workflows/ci-gate.yml` and `.github/workflows/build-push.yml` matrices
-5. Add a smoke test entry in `ci-gate.yml` with the correct port and health path
+4. Add to `.dockerignore` whitelist
+5. Add the image to ALL CI workflow matrices:
+   - `.github/workflows/ci-gate.yml` (hadolint, build-and-scan, smoke-test)
+   - `.github/workflows/build-push.yml` (build matrix with platforms)
+   - `.github/workflows/security-scan.yml` (grype-scan matrix)
 6. Add Dependabot config in `.github/dependabot.yml`
-7. Update the image table in `README.md` and `SECURITY.md`
+7. Update documentation:
+   - `README.md` — image table, architecture section, repo structure tree
+   - `SECURITY.md` — supported versions table
+   - `CONTRIBUTING.md` — build examples if applicable
 
 ## Branching Workflow
 

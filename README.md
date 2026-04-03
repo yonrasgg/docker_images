@@ -20,6 +20,9 @@ Every image is built with multi-stage builds, runs as a non-root user, is scanne
 | **jackett** | 9117 | Indexer proxy/aggregator | `docker pull ghcr.io/yonrasgg/jackett:latest` |
 | **plex** | 32400 | Media server with HW transcoding | `docker pull ghcr.io/yonrasgg/plex:latest` |
 | **dashy** | 8080 | Self-hosted application dashboard | `docker pull ghcr.io/yonrasgg/dashy:latest` |
+| **wireguard-ui** | 5000 | WireGuard VPN web management UI | `docker pull ghcr.io/yonrasgg/wireguard-ui:latest` |
+| **syncthing** | 8384 | Continuous file synchronization | `docker pull ghcr.io/yonrasgg/syncthing:latest` |
+| **caddy** | 80, 443 | Reverse proxy with automatic HTTPS | `docker pull ghcr.io/yonrasgg/caddy:latest` |
 
 ## Supply Chain Security
 
@@ -187,6 +190,18 @@ Dashy uses `node:20-alpine` because:
 - `su-exec` replaces `gosu` as the lightweight Alpine equivalent for privilege dropping
 - `apk` is stripped post-build, same as `apt`/`dpkg` on Debian images
 
+### Alpine for Go Applications
+
+WireGuard UI, Syncthing, and Caddy use `alpine:3.21` because:
+
+- All are statically-compiled Go binaries with zero native library dependencies
+- WireGuard UI is compiled from source (`CGO_ENABLED=0`) in a Go builder stage
+- Caddy is compiled from source via `xcaddy` (`CGO_ENABLED=0`) with optimized flags (`-s -w`, `-trimpath`) and optional plugins
+- Syncthing uses official pre-built release binaries (multi-arch via `TARGETARCH`)
+- Alpine provides the smallest possible runtime (~7 MB base) for static binaries
+- Runtime dependencies are minimal: `su-exec`, `tini`, `curl` (health checks), `tzdata`
+- WireGuard UI additionally installs `wireguard-tools` and `iproute2` for interface management
+
 Both base OS families share identical hardening and stripping scripts (`shared/hardening.sh`, `shared/strip.sh`) with automatic OS detection.
 
 ## Repository Structure
@@ -198,6 +213,9 @@ Both base OS families share identical hardening and stripping scripts (`shared/h
 ├── jackett/         # Jackett Dockerfile + entrypoint
 ├── plex/            # Plex Dockerfile + entrypoint
 ├── dashy/           # Dashy Dockerfile + entrypoint (Alpine)
+├── wireguard-ui/    # WireGuard UI Dockerfile + entrypoint (Alpine)
+├── syncthing/       # Syncthing Dockerfile + entrypoint (Alpine)
+├── caddy/           # Caddy reverse proxy Dockerfile + entrypoint (Alpine)
 ├── shared/          # Common hardening + stripping scripts
 │   ├── hardening.sh # SUID/SGID removal, cleanup, crontab purge
 │   └── strip.sh     # Package manager + tool removal (Debian + Alpine)
