@@ -180,3 +180,20 @@ CVE-2024-45337
 # golang.org/x/crypto/ssh — DoS via SSH banner
 # Same: WireGuard UI never handles SSH connections
 CVE-2025-22869
+
+# --- Syncthing v2.0.15 Go stdlib CVE ---
+# Syncthing v2.0.15 is built with Go 1.26.0; the fix requires Go 1.26.1.
+# Pre-built binary — we cannot control the compiler version.
+# crypto/x509 email constraint enforcement — low risk, Syncthing uses its
+# own self-signed TLS certificates for device authentication, not email-based
+# X.509 constraints. Home-network file sync context.
+# Review: 2026-05-01
+CVE-2026-27137
+
+# --- Caddy v2.11.2 transitive dependency CVE ---
+# Caddy v2.11.2 pins google.golang.org/grpc v1.79.1; fix requires v1.79.3.
+# gRPC is used internally by Caddy plugins — the admin API listens on
+# localhost:2019 only. In a reverse proxy context behind a firewall,
+# the gRPC attack surface is not externally reachable.
+# Review: 2026-05-01
+CVE-2026-33186
