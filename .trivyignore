@@ -9,7 +9,7 @@
 # The nightly security-scan.yml workflow reports ALL vulnerabilities
 # regardless of this file.
 #
-# Last reviewed: 2026-04-02
+# Last reviewed: 2026-04-03
 # =============================================================================
 
 # --- Sonarr / Radarr .NET transitive dependencies ---
@@ -99,3 +99,32 @@ CVE-2026-24842
 CVE-2026-26960
 CVE-2026-29786
 CVE-2026-31802
+
+# lodash 4.17.23 — Prototype Pollution via array path bypass in _.unset/_.omit
+# Requires attacker-controlled property paths — low risk, Dashy processes trusted
+# local dashboard config only; no untrusted input reaches lodash path functions
+# Review: 2026-05-01
+CVE-2026-2950
+
+# nuxt (via vue-js-modal/examples/) — XSS in navigateTo after SSR
+# Found in example code of a transitive dep, not used at Dashy runtime
+# Review: 2026-05-01
+CVE-2024-34343
+
+# brace-expansion (via npm internal deps, not Dashy application code)
+# DoS via zero step value + ReDoS — low risk, npm is not invoked at runtime;
+# patterns come from trusted local config only
+# Review: 2026-05-01
+CVE-2026-33750
+CVE-2025-5889
+
+# vue 2.x — ReDoS in template compiler
+# Low severity, Dashy compiles templates at build time only, not at runtime
+# from untrusted input
+# Review: 2026-05-01
+CVE-2024-9506
+
+# jsdiff (via npm internal deps, not Dashy application code)
+# DoS in parsePatch/applyPatch — low risk, npm diff not invoked at runtime
+# Review: 2026-05-01
+CVE-2026-24001
