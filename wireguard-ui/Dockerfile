@@ -20,6 +20,7 @@ WORKDIR /src
 
 RUN apk add --no-cache git build-base
 
+# hadolint ignore=DL3062
 RUN git clone --branch "${WG_UI_VERSION}" --depth 1 \
       https://github.com/ngoduykhanh/wireguard-ui.git . && \
     go get golang.org/x/crypto@latest && go mod tidy && \

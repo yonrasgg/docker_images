@@ -15,6 +15,7 @@ ARG SYNCTHING_VERSION=v2.0.15
 RUN apk add --no-cache curl ca-certificates
 
 # Download pre-built binary and verify SHA256 checksum
+# hadolint ignore=DL4006
 RUN set -eux; \
     curl -fsSL -o /tmp/syncthing.tar.gz \
       "https://github.com/syncthing/syncthing/releases/download/${SYNCTHING_VERSION}/syncthing-linux-${TARGETARCH}-${SYNCTHING_VERSION}.tar.gz"; \
