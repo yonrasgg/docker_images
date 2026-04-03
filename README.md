@@ -22,6 +22,7 @@ Every image is built with multi-stage builds, runs as a non-root user, is scanne
 | **dashy** | 8080 | Self-hosted application dashboard | `docker pull ghcr.io/yonrasgg/dashy:latest` |
 | **wireguard-ui** | 5000 | WireGuard VPN web management UI | `docker pull ghcr.io/yonrasgg/wireguard-ui:latest` |
 | **syncthing** | 8384 | Continuous file synchronization | `docker pull ghcr.io/yonrasgg/syncthing:latest` |
+| **caddy** | 80, 443 | Reverse proxy with automatic HTTPS | `docker pull ghcr.io/yonrasgg/caddy:latest` |
 
 ## Supply Chain Security
 
@@ -191,10 +192,11 @@ Dashy uses `node:20-alpine` because:
 
 ### Alpine for Go Applications
 
-WireGuard UI and Syncthing use `alpine:3.21` because:
+WireGuard UI, Syncthing, and Caddy use `alpine:3.21` because:
 
-- Both are statically-compiled Go binaries with zero native library dependencies
+- All are statically-compiled Go binaries with zero native library dependencies
 - WireGuard UI is compiled from source (`CGO_ENABLED=0`) in a Go builder stage
+- Caddy is compiled from source via `xcaddy` (`CGO_ENABLED=0`) with optimized flags (`-s -w`, `-trimpath`) and optional plugins
 - Syncthing uses official pre-built release binaries (multi-arch via `TARGETARCH`)
 - Alpine provides the smallest possible runtime (~7 MB base) for static binaries
 - Runtime dependencies are minimal: `su-exec`, `tini`, `curl` (health checks), `tzdata`
@@ -213,6 +215,7 @@ Both base OS families share identical hardening and stripping scripts (`shared/h
 ├── dashy/           # Dashy Dockerfile + entrypoint (Alpine)
 ├── wireguard-ui/    # WireGuard UI Dockerfile + entrypoint (Alpine)
 ├── syncthing/       # Syncthing Dockerfile + entrypoint (Alpine)
+├── caddy/           # Caddy reverse proxy Dockerfile + entrypoint (Alpine)
 ├── shared/          # Common hardening + stripping scripts
 │   ├── hardening.sh # SUID/SGID removal, cleanup, crontab purge
 │   └── strip.sh     # Package manager + tool removal (Debian + Alpine)

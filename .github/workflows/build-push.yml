@@ -18,6 +18,7 @@ on:
       - 'dashy/**'
       - 'wireguard-ui/**'
       - 'syncthing/**'
+      - 'caddy/**'
       - 'shared/**'
       - '.github/workflows/build-push.yml'
   schedule:
@@ -79,6 +80,10 @@ jobs:
           - name: syncthing
             context: .
             dockerfile: syncthing/Dockerfile
+            platforms: linux/amd64,linux/arm64
+          - name: caddy
+            context: .
+            dockerfile: caddy/Dockerfile
             platforms: linux/amd64,linux/arm64
 
     steps:

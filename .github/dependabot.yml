@@ -74,6 +74,14 @@ updates:
     commit-message:
       prefix: "docker(syncthing)"
 
+  - package-ecosystem: "docker"
+    directory: "/caddy"
+    target-branch: "hardening"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "docker(caddy)"
+
   # Python dependencies (SABnzbd)
   - package-ecosystem: "pip"
     directory: "/sabnzbd"

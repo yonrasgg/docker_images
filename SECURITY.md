@@ -14,6 +14,7 @@ Only the `latest` tag of each image receives security updates. All images are re
 | dashy   | ✅ latest  |
 | wireguard-ui | ✅ latest |
 | syncthing | ✅ latest |
+| caddy   | ✅ latest |
 
 ## Supply Chain Security
 
