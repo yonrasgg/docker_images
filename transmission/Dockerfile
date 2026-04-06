@@ -88,7 +88,6 @@ RUN apt-get update && \
     apt-get upgrade -y && \
     apt-get install -y --no-install-recommends \
       ca-certificates \
-      curl \
       libcurl4 \
       libdeflate0 \
       libevent-2.1-7 \
@@ -139,7 +138,7 @@ EXPOSE 9091 51413/tcp 51413/udp
 VOLUME ["/config", "/downloads", "/watch"]
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
-  CMD curl -fsS http://localhost:9091/transmission/web/ || exit 1
+  CMD bash -c 'exec 3<>/dev/tcp/localhost/9091 && printf "GET /transmission/web/ HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n" >&3 && IFS= read -r status <&3 && printf "%s\n" "$status" | grep -Eq "^HTTP/[0-9.]+ [23][0-9][0-9]( |$)"' || exit 1
 
 ENTRYPOINT ["tini", "--", "/entrypoint.sh"]
 CMD ["transmission-daemon", "-f", "-g", "/config"]

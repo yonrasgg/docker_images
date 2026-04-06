@@ -65,7 +65,6 @@ RUN apt-get update && \
     apt-get upgrade -y && \
     apt-get install -y --no-install-recommends \
       ca-certificates \
-      curl \
       libicu72 \
       libsqlite3-0 \
       libssl3 \
@@ -103,7 +102,7 @@ EXPOSE 7878
 VOLUME ["/config", "/downloads", "/movies"]
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-  CMD curl -fsS http://localhost:7878/ping || exit 1
+  CMD bash -c 'exec 3<>/dev/tcp/localhost/7878 && printf "GET /ping HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n" >&3 && IFS= read -r status <&3 && printf "%s\n" "$status" | grep -Eq "^HTTP/[0-9.]+ 2[0-9][0-9]( |$)"' || exit 1
 
 ENTRYPOINT ["tini", "--", "/entrypoint.sh"]
 CMD ["/opt/radarr/Radarr", "-nobrowser", "-data=/config"]

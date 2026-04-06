@@ -36,9 +36,6 @@ docker build -f dashy/Dockerfile -t dashy:dev .
 docker build -f wireguard-ui/Dockerfile -t wireguard-ui:dev .
 docker build -f syncthing/Dockerfile -t syncthing:dev .
 docker build -f caddy/Dockerfile -t caddy:dev .
-
-# Build for a specific architecture
-docker buildx build -f sonarr/Dockerfile --platform linux/arm64 -t sonarr:dev-arm64 .
 ```
 
 ## Testing an Image

@@ -75,7 +75,7 @@ Every image applies these security controls:
 - **`tini` PID 1** — proper signal handling and zombie reaping
 - **OCI labels** — full provenance metadata on every image
 - **No embedded secrets** — configuration via env vars and volumes only
-- **Multi-arch** — `linux/amd64` + `linux/arm64`
+- **Architecture** — `linux/amd64`
 - **Reverse proxy ready** — URL base paths auto-configured for Caddy/Nginx
 - **Capability drop** — designed for `cap_drop: ALL` with minimal adds
 - **`.dockerignore`** — build context excludes secrets, docs, and legacy files
@@ -145,7 +145,7 @@ PR: hardening → main ─► CODEOWNER approval required
 main branch ──────► Publish workflow
                       │
                       ├─ Final Trivy scan (belt-and-suspenders)
-                      ├─ Build multi-arch (amd64 + arm64)
+                      ├─ Build amd64 image
                       ├─ Push to ghcr.io (latest + YYYY.MM.DD + SHA)
                       ├─ Cosign keyless signing (OIDC)
                       ├─ Syft SBOM generation + attestation
@@ -198,9 +198,9 @@ WireGuard UI, Syncthing, and Caddy use `alpine:3.21` because:
 - All are statically-compiled Go binaries with zero native library dependencies
 - WireGuard UI is compiled from source (`CGO_ENABLED=0`) in a Go builder stage
 - Caddy is compiled from source via `xcaddy` (`CGO_ENABLED=0`) with optimized flags (`-s -w`, `-trimpath`) and optional plugins
-- Syncthing uses official pre-built release binaries (multi-arch via `TARGETARCH`)
+- Syncthing uses official pre-built release binaries
 - Alpine provides the smallest possible runtime (~7 MB base) for static binaries
-- Runtime dependencies are minimal: `su-exec`, `tini`, `curl` (health checks), `tzdata`
+- Runtime dependencies are minimal: `su-exec`, `tini`, `tzdata`
 - WireGuard UI additionally installs `wireguard-tools` and `iproute2` for interface management
 
 Both base OS families share identical hardening and stripping scripts (`shared/hardening.sh`, `shared/strip.sh`) with automatic OS detection.
