@@ -36,7 +36,7 @@ fi
 echo "[strip] Removing file-search utilities..."
 rm -rf /usr/bin/find /usr/bin/locate /usr/bin/xargs
 
-echo "[strip] Removing curl CLI (healthchecks use bash /dev/tcp instead)..."
+echo "[strip] Removing curl CLI (runtime healthchecks do not rely on curl CLI)..."
 rm -f /usr/bin/curl
 
 echo "[strip] Removing user-management tools..."

@@ -105,7 +105,7 @@ EXPOSE 9696
 VOLUME ["/config"]
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-  CMD bash -c 'echo -e "GET /ping HTTP/1.0\r\nHost: localhost\r\n" > /dev/tcp/localhost/9696' || exit 1
+  CMD bash -c 'exec 3<>/dev/tcp/localhost/9696 && printf "GET /ping HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n" >&3 && IFS= read -r status <&3 && printf "%s\n" "$status" | grep -Eq "^HTTP/[0-9.]+ 2[0-9][0-9]( |$)"' || exit 1
 
 ENTRYPOINT ["tini", "--", "/entrypoint.sh"]
 CMD ["/opt/prowlarr/Prowlarr", "-nobrowser", "-data=/config"]

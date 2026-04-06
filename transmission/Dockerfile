@@ -138,7 +138,7 @@ EXPOSE 9091 51413/tcp 51413/udp
 VOLUME ["/config", "/downloads", "/watch"]
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
-  CMD bash -c 'echo -e "GET /transmission/web/ HTTP/1.0\r\nHost: localhost\r\n" > /dev/tcp/localhost/9091' || exit 1
+  CMD bash -c 'exec 3<>/dev/tcp/localhost/9091 && printf "GET /transmission/web/ HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n" >&3 && IFS= read -r status <&3 && printf "%s\n" "$status" | grep -Eq "^HTTP/[0-9.]+ [23][0-9][0-9]( |$)"' || exit 1
 
 ENTRYPOINT ["tini", "--", "/entrypoint.sh"]
 CMD ["transmission-daemon", "-f", "-g", "/config"]
