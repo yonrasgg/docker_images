@@ -3,8 +3,8 @@
 # https://aquasecurity.github.io/trivy/latest/docs/configuration/filtering/#trivyignore
 #
 # These CVEs are from transitive dependencies of upstream applications
-# (e.g., SABnzbd's pip requirements) and cannot be fixed without breaking
-# compatibility. They are reviewed monthly and removed once upstream updates.
+# and cannot be fixed without breaking compatibility. They are reviewed
+# monthly and removed once upstream updates.
 #
 # The nightly security-scan.yml workflow reports ALL vulnerabilities
 # regardless of this file.
@@ -13,10 +13,7 @@
 #
 # Remediated (2026-04-03):
 #   - gosu 1.14→1.19: All 30+ Go stdlib CVEs eliminated (5 Debian images)
-#   - p7zip-full→7zip: 5 HIGH CVEs eliminated (sabnzbd)
 #   - npm/yarn/corepack stripped from runtime: ~15 HIGH CVEs eliminated (dashy)
-#   - Python deps constraint-upgraded: urllib3≥2.6.3, ujson≥5.12.0, pyjwt≥2.12.0,
-#     orjson≥3.11.6, cryptography≥46.0.5 (sabnzbd)
 #   - Caddy v2.9.1→v2.11.2: 11 CVEs eliminated (caddy deps + Go stdlib)
 #   - Syncthing v1.29.2→v2.0.15: Go runtime upgrade + SHA256 verification
 #   - WireGuard UI Go 1.22→1.26 + x/crypto upgraded: 9 CVEs eliminated
@@ -44,13 +41,8 @@ CVE-2026-26130
 # .NET Identity DoS — medium risk, internal API only, no external JWT validation
 CVE-2024-21319
 
-# --- SABnzbd Python transitive dependencies ---
-# NOTE: urllib3, ujson, pyjwt, orjson, and cryptography CVEs REMOVED 2026-04-03
-# after force-upgrading these packages in the builder stage Dockerfile.
-# The following were eliminated:
-#   CVE-2026-32597 (pyjwt), CVE-2025-67221 (orjson),
-#   CVE-2026-32874/32875 (ujson), CVE-2025-66418/66471/CVE-2026-21441 (urllib3),
-#   CVE-2026-26007 (cryptography)
+# --- SABnzbd Python transitive dependencies --- REMOVED
+# SABnzbd has been replaced by Transmission (compiled C++ binary, no Python deps)
 
 # --- Dashy Node.js transitive dependencies ---
 # These are upstream Dashy application dependencies pinned by yarn.lock.
@@ -116,7 +108,7 @@ CVE-2024-9506
 # Review: 2026-05-01
 CVE-2026-24001
 
-# --- gosu 1.19 Go stdlib CVEs (affects sonarr, radarr, prowlarr, plex, sabnzbd) ---
+# --- gosu 1.19 Go stdlib CVEs (affects sonarr, radarr, prowlarr, plex, transmission) ---
 # gosu 1.19 is the latest release, compiled with Go 1.24.6. No newer version exists.
 # gosu is a minimal setuid/setgid tool (~1.8MB static binary) that ONLY calls
 # setuid(2)/setgid(2) and exec(2). It never uses crypto/tls, archive/tar,

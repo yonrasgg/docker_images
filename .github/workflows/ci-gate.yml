@@ -13,7 +13,7 @@ on:
     paths:
       - 'sonarr/**'
       - 'radarr/**'
-      - 'sabnzbd/**'
+      - 'transmission/**'
       - 'prowlarr/**'
       - 'plex/**'
       - 'dashy/**'
@@ -40,7 +40,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        image: [sonarr, radarr, sabnzbd, prowlarr, plex, dashy, wireguard-ui, syncthing, caddy]
+        image: [sonarr, radarr, transmission, prowlarr, plex, dashy, wireguard-ui, syncthing, caddy]
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - uses: hadolint/hadolint-action@2332a7b74a6de0dda2e2221d575162eba76ba5e5 # v3.3.0
@@ -74,7 +74,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        image: [sonarr, radarr, sabnzbd, prowlarr, plex, dashy, wireguard-ui, syncthing, caddy]
+        image: [sonarr, radarr, transmission, prowlarr, plex, dashy, wireguard-ui, syncthing, caddy]
     env:
       IMAGE_TAG: "ci-gate/${{ matrix.image }}:${{ github.sha }}"
     steps:
@@ -150,10 +150,10 @@ jobs:
             port: 7878
             health_path: /ping
             timeout: 120
-          - name: sabnzbd
-            port: 8080
-            health_path: /api?mode=version
-            timeout: 120
+          - name: transmission
+            port: 9091
+            health_path: /transmission/web/
+            timeout: 60
           - name: prowlarr
             port: 9696
             health_path: /ping
