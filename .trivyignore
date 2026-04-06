@@ -281,3 +281,9 @@ CVE-2026-27142
 # the gRPC attack surface is not externally reachable.
 # Review: 2026-05-01
 CVE-2026-33186
+
+# go-jose/go-jose/v3 v3.0.4 → fix in v3.0.5 (Caddy transitive dep)
+# Panic in JWE decryption — low risk, Caddy does not process external JWE
+# tokens. Used internally by ACME/step-ca integration. Home network context.
+# Review: 2026-05-01
+CVE-2026-34986
