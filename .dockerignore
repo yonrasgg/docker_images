@@ -25,10 +25,10 @@
 !radarr/Dockerfile
 !radarr/entrypoint.sh
 
-# SABnzbd
-!sabnzbd/
-!sabnzbd/Dockerfile
-!sabnzbd/entrypoint.sh
+# Transmission
+!transmission/
+!transmission/Dockerfile
+!transmission/entrypoint.sh
 
 # Prowlarr
 !prowlarr/

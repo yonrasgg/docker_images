@@ -65,7 +65,7 @@ shellcheck sonarr/entrypoint.sh shared/hardening.sh shared/strip.sh
 1. Create a directory: `<image-name>/`
 2. Add `Dockerfile` following the existing patterns:
    - Multi-stage build (builder + runtime)
-   - **Debian `bookworm-slim`**: for .NET/media apps (sonarr, radarr, prowlarr, plex) or Python (sabnzbd)
+   - **Debian `bookworm-slim`**: for .NET/media apps (sonarr, radarr, prowlarr, plex) or C++ apps (transmission)
    - **Alpine `node:20-alpine`**: for pure Node.js apps (dashy)
    - **Alpine `alpine:3.21`**: for statically-compiled Go binaries (wireguard-ui, syncthing, caddy)
    - See [Architecture Decisions](README.md#architecture-decisions) for rationale

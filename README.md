@@ -16,7 +16,7 @@ Every image is built with multi-stage builds, runs as a non-root user, is scanne
 |-------|------|-------------|------|
 | **sonarr** | 8989 | TV series PVR for Usenet/BitTorrent | `docker pull ghcr.io/yonrasgg/sonarr:latest` |
 | **radarr** | 7878 | Movie collection manager | `docker pull ghcr.io/yonrasgg/radarr:latest` |
-| **sabnzbd** | 8080 | Usenet binary downloader | `docker pull ghcr.io/yonrasgg/sabnzbd:latest` |
+| **transmission** | 9091 | BitTorrent client with web UI | `docker pull ghcr.io/yonrasgg/transmission:latest` |
 | **prowlarr** | 9696 | Indexer manager for Usenet/BitTorrent | `docker pull ghcr.io/yonrasgg/prowlarr:latest` |
 | **plex** | 32400 | Media server with HW transcoding | `docker pull ghcr.io/yonrasgg/plex:latest` |
 | **dashy** | 8080 | Self-hosted application dashboard | `docker pull ghcr.io/yonrasgg/dashy:latest` |
@@ -171,14 +171,15 @@ On-demand ──────────► OpenSSF Scorecard assessment
 
 ### Debian for Media Stack
 
-The media stack images (Sonarr, Radarr, Prowlarr, Plex, SABnzbd) use `debian:bookworm-slim` because:
+The media stack images (Sonarr, Radarr, Prowlarr, Plex, Transmission) use `debian:bookworm-slim` because:
 
 - Sonarr, Radarr, and Prowlarr are .NET applications that depend on `libicu` and `glibc` — Alpine uses `musl`, which causes runtime incompatibilities
 - Plex Media Server distributes official `.deb` packages only
+- Transmission is compiled from source (C/C++17) and links against Debian system libraries (libcurl, libevent, libminiupnpc, libnatpmp, libssl)
 - `bookworm-slim` provides a minimal footprint (~80 MB) with broad compatibility
 - Security scanning coverage for Debian packages is more comprehensive in Trivy/Grype
 
-SABnzbd (Python-based) could theoretically run on Alpine, but using a consistent base across the stack simplifies maintenance and security patching.
+Transmission is compiled from source because Debian bookworm packages only v3.00 while the latest stable release is v4.1.1.
 
 ### Alpine for Dashy
 
@@ -209,7 +210,7 @@ Both base OS families share identical hardening and stripping scripts (`shared/h
 ```
 ├── sonarr/          # Sonarr Dockerfile + entrypoint
 ├── radarr/          # Radarr Dockerfile + entrypoint
-├── sabnzbd/         # SABnzbd Dockerfile + entrypoint
+├── transmission/    # Transmission Dockerfile + entrypoint
 ├── prowlarr/         # Prowlarr Dockerfile + entrypoint
 ├── plex/            # Plex Dockerfile + entrypoint
 ├── dashy/           # Dashy Dockerfile + entrypoint (Alpine)

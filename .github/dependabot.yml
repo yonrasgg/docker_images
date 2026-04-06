@@ -27,12 +27,12 @@ updates:
       prefix: "docker(radarr)"
 
   - package-ecosystem: "docker"
-    directory: "/sabnzbd"
+    directory: "/transmission"
     target-branch: "hardening"
     schedule:
       interval: "weekly"
     commit-message:
-      prefix: "docker(sabnzbd)"
+      prefix: "docker(transmission)"
 
   - package-ecosystem: "docker"
     directory: "/prowlarr"
@@ -82,11 +82,3 @@ updates:
     commit-message:
       prefix: "docker(caddy)"
 
-  # Python dependencies (SABnzbd)
-  - package-ecosystem: "pip"
-    directory: "/sabnzbd"
-    target-branch: "hardening"
-    schedule:
-      interval: "weekly"
-    commit-message:
-      prefix: "deps(sabnzbd)"
