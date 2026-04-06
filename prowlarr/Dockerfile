@@ -1,5 +1,5 @@
 # =============================================================================
-# Hardened Radarr Docker Image
+# Hardened Prowlarr Docker Image
 # Multi-stage, non-root, minimal attack surface
 # https://github.com/yonrasgg/docker_images
 # =============================================================================
@@ -25,7 +25,7 @@ RUN CGO_ENABLED=0 go build -ldflags='-s -w' -o /usr/local/bin/gosu .
 # --- Stage 2: Download application ---
 FROM ${BASE_IMAGE} AS downloader
 
-ARG RADARR_BRANCH=master
+ARG PROWLARR_BRANCH=master
 ARG TARGETARCH
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
@@ -40,12 +40,12 @@ RUN set -eux; \
       arm64) ARCH="arm64" ;; \
       *) echo "Unsupported architecture: ${TARGETARCH}" && exit 1 ;; \
     esac; \
-    curl -fsSL -o /tmp/radarr.tar.gz \
-      "https://radarr.servarr.com/v1/update/${RADARR_BRANCH}/updatefile?os=linux&runtime=netcore&arch=${ARCH}"; \
-    mkdir -p /opt/radarr; \
-    tar -xzf /tmp/radarr.tar.gz -C /opt/radarr --strip-components=1; \
-    rm -f /tmp/radarr.tar.gz; \
-    rm -rf /opt/radarr/Radarr.Update
+    curl -fsSL -o /tmp/prowlarr.tar.gz \
+      "https://prowlarr.servarr.com/v1/update/${PROWLARR_BRANCH}/updatefile?os=linux&runtime=netcore&arch=${ARCH}"; \
+    mkdir -p /opt/prowlarr; \
+    tar -xzf /tmp/prowlarr.tar.gz -C /opt/prowlarr --strip-components=1; \
+    rm -f /tmp/prowlarr.tar.gz; \
+    rm -rf /opt/prowlarr/Prowlarr.Update
 
 # --- Stage 3: Runtime ---
 FROM ${BASE_IMAGE}
@@ -53,10 +53,10 @@ FROM ${BASE_IMAGE}
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 LABEL maintainer="yonrasgg" \
-      org.opencontainers.image.title="Hardened Radarr" \
-      org.opencontainers.image.description="Security-hardened Radarr movie collection manager" \
+      org.opencontainers.image.title="Hardened Prowlarr" \
+      org.opencontainers.image.description="Security-hardened Prowlarr indexer manager for Usenet and BitTorrent" \
       org.opencontainers.image.url="https://github.com/yonrasgg/docker_images" \
-      org.opencontainers.image.source="https://github.com/yonrasgg/docker_images/tree/main/radarr" \
+      org.opencontainers.image.source="https://github.com/yonrasgg/docker_images/tree/main/prowlarr" \
       org.opencontainers.image.licenses="MIT" \
       org.opencontainers.image.vendor="yonrasgg"
 
@@ -69,7 +69,6 @@ RUN apt-get update && \
       libicu72 \
       libsqlite3-0 \
       libssl3 \
-      mediainfo \
       tini \
       tzdata && \
     apt-get clean && \
@@ -80,30 +79,34 @@ RUN apt-get update && \
 COPY --from=gosu-builder /usr/local/bin/gosu /usr/sbin/gosu
 RUN chmod +x /usr/sbin/gosu && gosu --version && gosu nobody true
 
+# Apply hardening (before user creation)
 COPY shared/hardening.sh /tmp/hardening.sh
 RUN chmod +x /tmp/hardening.sh && /tmp/hardening.sh && rm /tmp/hardening.sh
 
+# Create non-root user
 RUN groupadd -g 1000 media && \
     useradd -u 1000 -g media -d /config -s /usr/sbin/nologin media
 
-COPY --from=downloader /opt/radarr /opt/radarr
+# Copy application from downloader
+COPY --from=downloader /opt/prowlarr /opt/prowlarr
 
-RUN mkdir -p /config /downloads /movies && \
-    chown -R media:media /opt/radarr /config /downloads /movies
+# Create directory structure with correct ownership
+RUN mkdir -p /config && \
+    chown -R media:media /opt/prowlarr /config
 
-COPY radarr/entrypoint.sh /entrypoint.sh
+COPY prowlarr/entrypoint.sh /entrypoint.sh
 RUN chmod 755 /entrypoint.sh
 
 # Strip package manager and unnecessary tools (must run after user creation)
 COPY shared/strip.sh /tmp/strip.sh
 RUN chmod +x /tmp/strip.sh && /tmp/strip.sh && rm /tmp/strip.sh
 
-EXPOSE 7878
+EXPOSE 9696
 
-VOLUME ["/config", "/downloads", "/movies"]
+VOLUME ["/config"]
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-  CMD curl -fsS http://localhost:7878/ping || exit 1
+  CMD curl -fsS http://localhost:9696/ping || exit 1
 
 ENTRYPOINT ["tini", "--", "/entrypoint.sh"]
-CMD ["/opt/radarr/Radarr", "-nobrowser", "-data=/config"]
+CMD ["/opt/prowlarr/Prowlarr", "-nobrowser", "-data=/config"]

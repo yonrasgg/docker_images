@@ -44,7 +44,6 @@ LABEL maintainer="yonrasgg" \
 # Install runtime dependencies and apply all available security patches
 RUN apk update && apk upgrade && \
     apk add --no-cache \
-      curl \
       su-exec \
       tini \
       tzdata && \
@@ -96,7 +95,7 @@ EXPOSE 8080
 VOLUME ["/app/user-data"]
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-  CMD curl -fsS http://localhost:8080/ || exit 1
+  CMD wget -qO /dev/null http://localhost:8080/ || exit 1
 
 ENTRYPOINT ["tini", "--", "/entrypoint.sh"]
 CMD ["node", "server.js"]

@@ -24,7 +24,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        image: [sonarr, radarr, sabnzbd, jackett, plex, dashy, wireguard-ui, syncthing, caddy]
+        image: [sonarr, radarr, sabnzbd, prowlarr, plex, dashy, wireguard-ui, syncthing, caddy]
     steps:
       - name: Pull latest image
         id: pull

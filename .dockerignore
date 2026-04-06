@@ -30,10 +30,10 @@
 !sabnzbd/Dockerfile
 !sabnzbd/entrypoint.sh
 
-# Jackett
-!jackett/
-!jackett/Dockerfile
-!jackett/entrypoint.sh
+# Prowlarr
+!prowlarr/
+!prowlarr/Dockerfile
+!prowlarr/entrypoint.sh
 
 # Plex
 !plex/

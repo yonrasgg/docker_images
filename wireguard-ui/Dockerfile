@@ -40,7 +40,6 @@ LABEL maintainer="yonrasgg" \
 # iproute2: provides ip command required by wg-quick
 RUN apk update && apk upgrade && \
     apk add --no-cache \
-      curl \
       iproute2 \
       su-exec \
       tini \
@@ -77,7 +76,7 @@ EXPOSE 5000
 VOLUME ["/data", "/etc/wireguard"]
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
-    CMD curl -fsS http://localhost:5000/ || exit 1
+    CMD wget -qO /dev/null http://localhost:5000/ || exit 1
 
 ENTRYPOINT ["tini", "--", "/entrypoint.sh"]
 CMD ["/usr/local/bin/wireguard-ui"]

@@ -17,7 +17,7 @@ Every image is built with multi-stage builds, runs as a non-root user, is scanne
 | **sonarr** | 8989 | TV series PVR for Usenet/BitTorrent | `docker pull ghcr.io/yonrasgg/sonarr:latest` |
 | **radarr** | 7878 | Movie collection manager | `docker pull ghcr.io/yonrasgg/radarr:latest` |
 | **sabnzbd** | 8080 | Usenet binary downloader | `docker pull ghcr.io/yonrasgg/sabnzbd:latest` |
-| **jackett** | 9117 | Indexer proxy/aggregator | `docker pull ghcr.io/yonrasgg/jackett:latest` |
+| **prowlarr** | 9696 | Indexer manager for Usenet/BitTorrent | `docker pull ghcr.io/yonrasgg/prowlarr:latest` |
 | **plex** | 32400 | Media server with HW transcoding | `docker pull ghcr.io/yonrasgg/plex:latest` |
 | **dashy** | 8080 | Self-hosted application dashboard | `docker pull ghcr.io/yonrasgg/dashy:latest` |
 | **wireguard-ui** | 5000 | WireGuard VPN web management UI | `docker pull ghcr.io/yonrasgg/wireguard-ui:latest` |
@@ -171,9 +171,9 @@ On-demand ──────────► OpenSSF Scorecard assessment
 
 ### Debian for Media Stack
 
-The media stack images (Sonarr, Radarr, Jackett, Plex, SABnzbd) use `debian:bookworm-slim` because:
+The media stack images (Sonarr, Radarr, Prowlarr, Plex, SABnzbd) use `debian:bookworm-slim` because:
 
-- Sonarr, Radarr, and Jackett are .NET applications that depend on `libicu` and `glibc` — Alpine uses `musl`, which causes runtime incompatibilities
+- Sonarr, Radarr, and Prowlarr are .NET applications that depend on `libicu` and `glibc` — Alpine uses `musl`, which causes runtime incompatibilities
 - Plex Media Server distributes official `.deb` packages only
 - `bookworm-slim` provides a minimal footprint (~80 MB) with broad compatibility
 - Security scanning coverage for Debian packages is more comprehensive in Trivy/Grype
@@ -210,7 +210,7 @@ Both base OS families share identical hardening and stripping scripts (`shared/h
 ├── sonarr/          # Sonarr Dockerfile + entrypoint
 ├── radarr/          # Radarr Dockerfile + entrypoint
 ├── sabnzbd/         # SABnzbd Dockerfile + entrypoint
-├── jackett/         # Jackett Dockerfile + entrypoint
+├── prowlarr/         # Prowlarr Dockerfile + entrypoint
 ├── plex/            # Plex Dockerfile + entrypoint
 ├── dashy/           # Dashy Dockerfile + entrypoint (Alpine)
 ├── wireguard-ui/    # WireGuard UI Dockerfile + entrypoint (Alpine)

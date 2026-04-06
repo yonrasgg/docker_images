@@ -13,7 +13,7 @@ on:
       - 'sonarr/**'
       - 'radarr/**'
       - 'sabnzbd/**'
-      - 'jackett/**'
+      - 'prowlarr/**'
       - 'plex/**'
       - 'dashy/**'
       - 'wireguard-ui/**'
@@ -57,9 +57,9 @@ jobs:
             context: .
             dockerfile: sabnzbd/Dockerfile
             platforms: linux/amd64,linux/arm64
-          - name: jackett
+          - name: prowlarr
             context: .
-            dockerfile: jackett/Dockerfile
+            dockerfile: prowlarr/Dockerfile
             platforms: linux/amd64,linux/arm64
           - name: plex
             context: .
