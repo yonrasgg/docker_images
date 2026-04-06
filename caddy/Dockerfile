@@ -59,7 +59,6 @@ LABEL maintainer="yonrasgg" \
 RUN apk update && apk upgrade && \
     apk add --no-cache \
       ca-certificates \
-      curl \
       libcap \
       su-exec \
       tini \
@@ -111,7 +110,7 @@ EXPOSE 80 443 443/udp 2019
 VOLUME ["/data", "/config", "/etc/caddy"]
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
-    CMD curl -fsS http://localhost:2019/config/ || exit 1
+    CMD wget -qO /dev/null http://localhost:2019/config/ || exit 1
 
 ENTRYPOINT ["tini", "--", "/entrypoint.sh"]
 CMD ["/usr/bin/caddy", "run", "--config", "/etc/caddy/Caddyfile", "--adapter", "caddyfile"]

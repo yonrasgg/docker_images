@@ -6,8 +6,24 @@
 
 ARG PYTHON_IMAGE=python:3.13-slim-bookworm
 ARG BASE_IMAGE=debian:bookworm-slim
+ARG GO_IMAGE=golang:1.26-alpine@sha256:2389ebfa5b7f43eeafbd6be0c3700cc46690ef842ad962f6c5bd6be49ed82039
 
-# --- Stage 1: Download and prepare ---
+# --- Stage 1: Build gosu from source with current Go toolchain ---
+# The upstream gosu binary (v1.19) is compiled with Go 1.24.6, which embeds
+# 30+ known Go stdlib CVEs. Building from source with Go 1.26.1 eliminates them.
+FROM ${GO_IMAGE} AS gosu-builder
+
+ARG GOSU_VERSION=1.19
+
+RUN apk add --no-cache git && \
+    git clone --branch "${GOSU_VERSION}" --depth 1 \
+      https://github.com/tianon/gosu.git /src/gosu
+
+WORKDIR /src/gosu
+
+RUN CGO_ENABLED=0 go build -ldflags='-s -w' -o /usr/local/bin/gosu .
+
+# --- Stage 2: Download and prepare ---
 FROM ${PYTHON_IMAGE} AS builder
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
@@ -48,7 +64,7 @@ RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir --prefix=/install \
       -r /opt/sabnzbd/requirements.txt
 
-# --- Stage 2: Runtime ---
+# --- Stage 3: Runtime ---
 FROM ${PYTHON_IMAGE}
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
@@ -82,18 +98,10 @@ RUN apt-get update && \
     ln -sf /usr/bin/7zz /usr/bin/7z && \
     ln -sf /usr/bin/7zz /usr/bin/7za
 
-# Download gosu from upstream — Debian packages gosu 1.14 compiled with Go 1.19,
-# which embeds 30+ known Go stdlib CVEs. Using upstream binary (Go 1.24+) resolves all.
-ARG GOSU_VERSION=1.19
-RUN set -eux; \
-    dpkgArch="$(dpkg --print-architecture)"; \
-    curl -fsSL -o /usr/sbin/gosu "https://github.com/tianon/gosu/releases/download/${GOSU_VERSION}/gosu-${dpkgArch}"; \
-    curl -fsSL -o /tmp/gosu.sha256 "https://github.com/tianon/gosu/releases/download/${GOSU_VERSION}/SHA256SUMS"; \
-    grep "gosu-${dpkgArch}$" /tmp/gosu.sha256 | sed "s|gosu-${dpkgArch}|/usr/sbin/gosu|" | sha256sum -c -; \
-    rm -f /tmp/gosu.sha256; \
-    chmod +x /usr/sbin/gosu; \
-    gosu --version; \
-    gosu nobody true
+# gosu built from source in gosu-builder stage (Go 1.26.1) — eliminates
+# 30+ Go stdlib CVEs embedded in the upstream pre-compiled binary (Go 1.24.6).
+COPY --from=gosu-builder /usr/local/bin/gosu /usr/sbin/gosu
+RUN chmod +x /usr/sbin/gosu && gosu --version && gosu nobody true
 
 # Apply hardening
 COPY shared/hardening.sh /tmp/hardening.sh

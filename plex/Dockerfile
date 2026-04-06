@@ -5,8 +5,24 @@
 # =============================================================================
 
 ARG BASE_IMAGE=debian:bookworm-slim
+ARG GO_IMAGE=golang:1.26-alpine@sha256:2389ebfa5b7f43eeafbd6be0c3700cc46690ef842ad962f6c5bd6be49ed82039
 
-# --- Stage 1: Download Plex ---
+# --- Stage 1: Build gosu from source with current Go toolchain ---
+# The upstream gosu binary (v1.19) is compiled with Go 1.24.6, which embeds
+# 30+ known Go stdlib CVEs. Building from source with Go 1.26.1 eliminates them.
+FROM ${GO_IMAGE} AS gosu-builder
+
+ARG GOSU_VERSION=1.19
+
+RUN apk add --no-cache git && \
+    git clone --branch "${GOSU_VERSION}" --depth 1 \
+      https://github.com/tianon/gosu.git /src/gosu
+
+WORKDIR /src/gosu
+
+RUN CGO_ENABLED=0 go build -ldflags='-s -w' -o /usr/local/bin/gosu .
+
+# --- Stage 2: Download Plex ---
 FROM ${BASE_IMAGE} AS downloader
 
 ARG TARGETARCH
@@ -36,7 +52,7 @@ RUN set -eux; \
     dpkg-deb -x /tmp/plex.deb /opt/plex; \
     rm -f /tmp/plex.deb
 
-# --- Stage 2: Runtime ---
+# --- Stage 3: Runtime ---
 FROM ${BASE_IMAGE}
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
@@ -71,18 +87,10 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/* /tmp/* /var/tmp/*
 
-# Download gosu from upstream — Debian packages gosu 1.14 compiled with Go 1.19,
-# which embeds 30+ known Go stdlib CVEs. Using upstream binary (Go 1.24+) resolves all.
-ARG GOSU_VERSION=1.19
-RUN set -eux; \
-    dpkgArch="$(dpkg --print-architecture)"; \
-    curl -fsSL -o /usr/sbin/gosu "https://github.com/tianon/gosu/releases/download/${GOSU_VERSION}/gosu-${dpkgArch}"; \
-    curl -fsSL -o /tmp/gosu.sha256 "https://github.com/tianon/gosu/releases/download/${GOSU_VERSION}/SHA256SUMS"; \
-    grep "gosu-${dpkgArch}$" /tmp/gosu.sha256 | sed "s|gosu-${dpkgArch}|/usr/sbin/gosu|" | sha256sum -c -; \
-    rm -f /tmp/gosu.sha256; \
-    chmod +x /usr/sbin/gosu; \
-    gosu --version; \
-    gosu nobody true
+# gosu built from source in gosu-builder stage (Go 1.26.1) — eliminates
+# 30+ Go stdlib CVEs embedded in the upstream pre-compiled binary (Go 1.24.6).
+COPY --from=gosu-builder /usr/local/bin/gosu /usr/sbin/gosu
+RUN chmod +x /usr/sbin/gosu && gosu --version && gosu nobody true
 
 COPY shared/hardening.sh /tmp/hardening.sh
 RUN chmod +x /tmp/hardening.sh && /tmp/hardening.sh && rm /tmp/hardening.sh

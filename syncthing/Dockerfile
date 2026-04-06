@@ -45,7 +45,6 @@ LABEL maintainer="yonrasgg" \
 # Install runtime dependencies and apply all available security patches
 RUN apk update && apk upgrade && \
     apk add --no-cache \
-      curl \
       su-exec \
       tini \
       tzdata && \
@@ -81,7 +80,7 @@ EXPOSE 8384 22000/tcp 22000/udp 21027/udp
 VOLUME ["/config", "/data"]
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
-    CMD curl -fsS http://localhost:8384/rest/noauth/health || exit 1
+    CMD wget -qO /dev/null http://localhost:8384/rest/noauth/health || exit 1
 
 ENTRYPOINT ["tini", "--", "/entrypoint.sh"]
 CMD ["/usr/local/bin/syncthing", "--no-browser", "--home=/config"]
