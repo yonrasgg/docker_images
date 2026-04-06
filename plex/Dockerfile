@@ -72,7 +72,6 @@ RUN apt-get update && \
     apt-get upgrade -y && \
     apt-get install -y --no-install-recommends \
       ca-certificates \
-      curl \
       libdrm2 \
       libva-drm2 \
       libva2 \
@@ -120,7 +119,7 @@ EXPOSE 32400/tcp 1900/udp 32469/tcp 5353/udp
 VOLUME ["/config", "/transcode", "/media"]
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=120s --retries=3 \
-  CMD curl -fsS http://localhost:32400/identity || exit 1
+  CMD bash -c 'echo -e "GET /identity HTTP/1.0\r\nHost: localhost\r\n" > /dev/tcp/localhost/32400' || exit 1
 
 ENTRYPOINT ["tini", "--", "/entrypoint.sh"]
 CMD ["/opt/plex/Plex Media Server"]

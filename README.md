@@ -200,7 +200,7 @@ WireGuard UI, Syncthing, and Caddy use `alpine:3.21` because:
 - Caddy is compiled from source via `xcaddy` (`CGO_ENABLED=0`) with optimized flags (`-s -w`, `-trimpath`) and optional plugins
 - Syncthing uses official pre-built release binaries
 - Alpine provides the smallest possible runtime (~7 MB base) for static binaries
-- Runtime dependencies are minimal: `su-exec`, `tini`, `curl` (health checks), `tzdata`
+- Runtime dependencies are minimal: `su-exec`, `tini`, `tzdata`
 - WireGuard UI additionally installs `wireguard-tools` and `iproute2` for interface management
 
 Both base OS families share identical hardening and stripping scripts (`shared/hardening.sh`, `shared/strip.sh`) with automatic OS detection.

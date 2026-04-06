@@ -65,7 +65,6 @@ RUN apt-get update && \
     apt-get upgrade -y && \
     apt-get install -y --no-install-recommends \
       ca-certificates \
-      curl \
       libicu72 \
       libsqlite3-0 \
       libssl3 \
@@ -107,7 +106,7 @@ EXPOSE 8989
 VOLUME ["/config", "/downloads", "/tv"]
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-  CMD curl -fsS http://localhost:8989/ping || exit 1
+  CMD bash -c 'echo -e "GET /ping HTTP/1.0\r\nHost: localhost\r\n" > /dev/tcp/localhost/8989' || exit 1
 
 ENTRYPOINT ["tini", "--", "/entrypoint.sh"]
 CMD ["/opt/sonarr/Sonarr", "-nobrowser", "-data=/config"]
