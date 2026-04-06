@@ -4,7 +4,7 @@
 # https://github.com/yonrasgg/docker_images
 # =============================================================================
 
-ARG BASE_IMAGE=debian:bookworm-slim
+ARG BASE_IMAGE=debian:bookworm-slim@sha256:f06537653ac770703bc45b4b113475bd402f451e85223f0f2837acbf89ab020a
 ARG GO_IMAGE=golang:1.26-alpine@sha256:2389ebfa5b7f43eeafbd6be0c3700cc46690ef842ad962f6c5bd6be49ed82039
 
 # --- Stage 1: Build gosu from source with current Go toolchain ---
