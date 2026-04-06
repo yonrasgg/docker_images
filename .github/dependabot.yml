@@ -35,12 +35,12 @@ updates:
       prefix: "docker(sabnzbd)"
 
   - package-ecosystem: "docker"
-    directory: "/jackett"
+    directory: "/prowlarr"
     target-branch: "hardening"
     schedule:
       interval: "weekly"
     commit-message:
-      prefix: "docker(jackett)"
+      prefix: "docker(prowlarr)"
 
   - package-ecosystem: "docker"
     directory: "/plex"

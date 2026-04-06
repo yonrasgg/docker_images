@@ -9,7 +9,7 @@ Only the `latest` tag of each image receives security updates. All images are re
 | sonarr  | ✅ latest  |
 | radarr  | ✅ latest  |
 | sabnzbd | ✅ latest  |
-| jackett | ✅ latest  |
+| prowlarr | ✅ latest  |
 | plex    | ✅ latest  |
 | dashy   | ✅ latest  |
 | wireguard-ui | ✅ latest |

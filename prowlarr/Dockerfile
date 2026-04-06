@@ -1,5 +1,5 @@
 # =============================================================================
-# Hardened Jackett Docker Image
+# Hardened Prowlarr Docker Image
 # Multi-stage, non-root, minimal attack surface
 # https://github.com/yonrasgg/docker_images
 # =============================================================================
@@ -9,6 +9,7 @@ ARG BASE_IMAGE=debian:bookworm-slim
 # --- Stage 1: Download application ---
 FROM ${BASE_IMAGE} AS downloader
 
+ARG PROWLARR_BRANCH=master
 ARG TARGETARCH
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
@@ -19,16 +20,16 @@ RUN apt-get update && \
 
 RUN set -eux; \
     case "${TARGETARCH}" in \
-      amd64) JACKETT_ARCH="AMDx64" ;; \
-      arm64) JACKETT_ARCH="ARM64" ;; \
+      amd64) ARCH="x64" ;; \
+      arm64) ARCH="arm64" ;; \
       *) echo "Unsupported architecture: ${TARGETARCH}" && exit 1 ;; \
     esac; \
-    curl -fsSL -o /tmp/jackett.tar.gz \
-      "https://github.com/Jackett/Jackett/releases/latest/download/Jackett.Binaries.Linux${JACKETT_ARCH}.tar.gz"; \
-    mkdir -p /opt/jackett; \
-    tar -xzf /tmp/jackett.tar.gz -C /opt/jackett --strip-components=1; \
-    rm -f /tmp/jackett.tar.gz; \
-    rm -rf /opt/jackett/Jackett.Update
+    curl -fsSL -o /tmp/prowlarr.tar.gz \
+      "https://prowlarr.servarr.com/v1/update/${PROWLARR_BRANCH}/updatefile?os=linux&runtime=netcore&arch=${ARCH}"; \
+    mkdir -p /opt/prowlarr; \
+    tar -xzf /tmp/prowlarr.tar.gz -C /opt/prowlarr --strip-components=1; \
+    rm -f /tmp/prowlarr.tar.gz; \
+    rm -rf /opt/prowlarr/Prowlarr.Update
 
 # --- Stage 2: Runtime ---
 FROM ${BASE_IMAGE}
@@ -36,10 +37,10 @@ FROM ${BASE_IMAGE}
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 LABEL maintainer="yonrasgg" \
-      org.opencontainers.image.title="Hardened Jackett" \
-      org.opencontainers.image.description="Security-hardened Jackett indexer proxy" \
+      org.opencontainers.image.title="Hardened Prowlarr" \
+      org.opencontainers.image.description="Security-hardened Prowlarr indexer manager for Usenet and BitTorrent" \
       org.opencontainers.image.url="https://github.com/yonrasgg/docker_images" \
-      org.opencontainers.image.source="https://github.com/yonrasgg/docker_images/tree/main/jackett" \
+      org.opencontainers.image.source="https://github.com/yonrasgg/docker_images/tree/main/prowlarr" \
       org.opencontainers.image.licenses="MIT" \
       org.opencontainers.image.vendor="yonrasgg"
 
@@ -50,6 +51,7 @@ RUN apt-get update && \
       ca-certificates \
       curl \
       libicu72 \
+      libsqlite3-0 \
       libssl3 \
       tini \
       tzdata && \
@@ -69,30 +71,34 @@ RUN set -eux; \
     gosu --version; \
     gosu nobody true
 
+# Apply hardening (before user creation)
 COPY shared/hardening.sh /tmp/hardening.sh
 RUN chmod +x /tmp/hardening.sh && /tmp/hardening.sh && rm /tmp/hardening.sh
 
+# Create non-root user
 RUN groupadd -g 1000 media && \
     useradd -u 1000 -g media -d /config -s /usr/sbin/nologin media
 
-COPY --from=downloader /opt/jackett /opt/jackett
+# Copy application from downloader
+COPY --from=downloader /opt/prowlarr /opt/prowlarr
 
-RUN mkdir -p /config /downloads && \
-    chown -R media:media /opt/jackett /config /downloads
+# Create directory structure with correct ownership
+RUN mkdir -p /config && \
+    chown -R media:media /opt/prowlarr /config
 
-COPY jackett/entrypoint.sh /entrypoint.sh
+COPY prowlarr/entrypoint.sh /entrypoint.sh
 RUN chmod 755 /entrypoint.sh
 
 # Strip package manager and unnecessary tools (must run after user creation)
 COPY shared/strip.sh /tmp/strip.sh
 RUN chmod +x /tmp/strip.sh && /tmp/strip.sh && rm /tmp/strip.sh
 
-EXPOSE 9117
+EXPOSE 9696
 
-VOLUME ["/config", "/downloads"]
+VOLUME ["/config"]
 
-HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
-  CMD curl -fsS http://localhost:9117/UI/Login || exit 1
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+  CMD curl -fsS http://localhost:9696/ping || exit 1
 
 ENTRYPOINT ["tini", "--", "/entrypoint.sh"]
-CMD ["/opt/jackett/jackett", "--NoUpdates", "--DataFolder=/config"]
+CMD ["/opt/prowlarr/Prowlarr", "-nobrowser", "-data=/config"]

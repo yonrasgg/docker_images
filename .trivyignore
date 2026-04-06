@@ -116,7 +116,7 @@ CVE-2024-9506
 # Review: 2026-05-01
 CVE-2026-24001
 
-# --- gosu 1.19 Go stdlib CVEs (affects sonarr, radarr, jackett, plex, sabnzbd) ---
+# --- gosu 1.19 Go stdlib CVEs (affects sonarr, radarr, prowlarr, plex, sabnzbd) ---
 # gosu 1.19 is the latest release, compiled with Go 1.24.6. No newer version exists.
 # gosu is a minimal setuid/setgid tool (~1.8MB static binary) that ONLY calls
 # setuid(2)/setgid(2) and exec(2). It never uses crypto/tls, archive/tar,

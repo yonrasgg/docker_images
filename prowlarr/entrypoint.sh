@@ -13,7 +13,7 @@ if [ "$PUID" != "1000" ]; then
     usermod -o -u "$PUID" media
 fi
 
-# --- Fix ownership (volumes only) ---
+# --- Fix ownership (volumes only, not application) ---
 chown media:media /config
 chmod 0750 /config
 
