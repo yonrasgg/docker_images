@@ -27,7 +27,7 @@ RUN CGO_ENABLED=0 go build -ldflags='-s -w' -o /usr/local/bin/gosu .
 FROM ${BASE_IMAGE} AS downloader
 
 ARG RADARR_BRANCH=master
-# renovate: datasource=github-releases depName=Radarr/Radarr
+# renovate: datasource=github-releases depName=Radarr/Radarr versioning=loose
 ARG RADARR_VERSION=6.1.1.10360
 ARG TARGETARCH
 

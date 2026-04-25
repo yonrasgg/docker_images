@@ -54,12 +54,12 @@ jobs:
           only-fixed: true
           fail-build: false
 
-      - name: Filter SARIF to HIGH/CRITICAL results (warning/error levels)
+      - name: Filter SARIF to HIGH/CRITICAL results (error level only)
         if: always() && steps.pull.outputs.exists == 'true' && steps.scan.outputs.sarif != ''
         run: |
           jq '
             .runs |= map(
-              .results |= map(select(.level == "error" or .level == "warning"))
+              .results |= map(select(.level == "error"))
             )
           ' "${{ steps.scan.outputs.sarif }}" > "grype-${{ matrix.image }}.sarif"
 
