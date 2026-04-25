@@ -19,7 +19,9 @@ RUN apk add --no-cache curl ca-certificates
 
 # Download the source release, verify its SHA256 checksum, and build with the
 # pinned Go toolchain so the final binary picks up current stdlib fixes.
-# hadolint ignore=DL4006
+# DL3062 does not apply here because we build the checked-out release source
+# with `go run build.go`, not by installing an unpinned remote module.
+# hadolint ignore=DL4006,DL3062
 RUN set -eux; \
     curl -fsSL -o /tmp/syncthing-source.tar.gz \
       "https://github.com/syncthing/syncthing/releases/download/${SYNCTHING_VERSION}/syncthing-source-${SYNCTHING_VERSION}.tar.gz"; \
