@@ -4,32 +4,37 @@
 # https://github.com/yonrasgg/docker_images
 # =============================================================================
 
+ARG GO_IMAGE=golang:1.26-alpine@sha256:f85330846cde1e57ca9ec309382da3b8e6ae3ab943d2739500e08c86393a21b1
 ARG ALPINE_IMAGE=alpine:3.21@sha256:c3f8e73fdb79deaebaa2037150150191b9dcbfba68b4a46d70103204c53f4709
 
-# --- Stage 1: Download pre-built binary ---
-FROM ${ALPINE_IMAGE} AS downloader
+# --- Stage 1: Build from official source release ---
+FROM ${GO_IMAGE} AS builder
 
 ARG TARGETARCH
-ARG SYNCTHING_VERSION=v2.0.15
+ARG SYNCTHING_VERSION=v2.0.16
+
+WORKDIR /src
 
 RUN apk add --no-cache curl ca-certificates
 
-# Download pre-built binary and verify SHA256 checksum
-# Syncthing publishes a PGP-signed sha256sum.txt.asc; we strip the
-# PGP envelope and verify the hash for our architecture's tarball.
-# hadolint ignore=DL4006
+# Download the source release, verify its SHA256 checksum, and build with the
+# pinned Go toolchain so the final binary picks up current stdlib fixes.
+# DL3062 does not apply here because we build the checked-out release source
+# with `go run build.go`, not by installing an unpinned remote module.
+# hadolint ignore=DL4006,DL3062
 RUN set -eux; \
-    curl -fsSL -o /tmp/syncthing.tar.gz \
-      "https://github.com/syncthing/syncthing/releases/download/${SYNCTHING_VERSION}/syncthing-linux-${TARGETARCH}-${SYNCTHING_VERSION}.tar.gz"; \
+    curl -fsSL -o /tmp/syncthing-source.tar.gz \
+      "https://github.com/syncthing/syncthing/releases/download/${SYNCTHING_VERSION}/syncthing-source-${SYNCTHING_VERSION}.tar.gz"; \
     curl -fsSL -o /tmp/sha256sum.txt.asc \
       "https://github.com/syncthing/syncthing/releases/download/${SYNCTHING_VERSION}/sha256sum.txt.asc"; \
     sed -n '/^[a-f0-9]\{64\} /p' /tmp/sha256sum.txt.asc \
-      | grep "syncthing-linux-${TARGETARCH}-${SYNCTHING_VERSION}.tar.gz" \
-      | sed "s|syncthing-linux-${TARGETARCH}-${SYNCTHING_VERSION}.tar.gz|/tmp/syncthing.tar.gz|" \
+      | grep "syncthing-source-${SYNCTHING_VERSION}.tar.gz" \
+      | sed "s|syncthing-source-${SYNCTHING_VERSION}.tar.gz|/tmp/syncthing-source.tar.gz|" \
       | sha256sum -c -; \
-    mkdir -p /opt/syncthing; \
-    tar -xzf /tmp/syncthing.tar.gz -C /opt/syncthing --strip-components=1; \
-    rm -f /tmp/syncthing.tar.gz /tmp/sha256sum.txt.asc
+    tar -xzf /tmp/syncthing-source.tar.gz -C /src --strip-components=1; \
+    rm -f /tmp/syncthing-source.tar.gz /tmp/sha256sum.txt.asc; \
+    CGO_ENABLED=0 GOOS=linux GOARCH="${TARGETARCH}" go run build.go -no-upgrade build syncthing; \
+    install -m 0755 syncthing /usr/local/bin/syncthing
 
 # --- Stage 2: Hardened Runtime ---
 FROM ${ALPINE_IMAGE}
@@ -58,8 +63,8 @@ RUN chmod +x /tmp/hardening.sh && /tmp/hardening.sh && rm /tmp/hardening.sh
 RUN addgroup -g 1000 media && \
     adduser -u 1000 -G media -h /config -s /sbin/nologin -D media
 
-# Copy Syncthing binary from downloader
-COPY --from=downloader /opt/syncthing/syncthing /usr/local/bin/syncthing
+# Copy Syncthing binary from builder
+COPY --from=builder /usr/local/bin/syncthing /usr/local/bin/syncthing
 
 # Create data directories
 RUN mkdir -p /config /data && \

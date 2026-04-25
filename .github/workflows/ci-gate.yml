@@ -84,20 +84,23 @@ jobs:
         uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
 
       - name: Build image (amd64 only, no push)
-        uses: docker/build-push-action@d08e5c354a6adb9ed34480a06d141179aa583294 # v7.0.0
+        uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
         with:
           context: .
           file: ${{ matrix.image }}/Dockerfile
           platforms: linux/amd64
+          pull: true
           push: false
           load: true
+          no-cache: true
           tags: ${{ env.IMAGE_TAG }}
           cache-from: type=gha,scope=${{ matrix.image }}
           cache-to: type=gha,scope=${{ matrix.image }},mode=max
 
       # --- Trivy: CRITICAL + HIGH with available fix must be zero ---
       # Uses --ignore-unfixed to skip OS-level CVEs without distro patches.
-      # The nightly security-scan.yml reports ALL vulnerabilities for visibility.
+      # The nightly security-scan.yml separately scans published images for
+      # actionable HIGH/CRITICAL CVEs that already have fixes available.
       - name: "Trivy: vulnerability scan"
         uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # v0.35.0
         with:
@@ -110,8 +113,8 @@ jobs:
 
       # --- Also upload SARIF for the Security tab ---
       # Applies the same accept-list as the gate scan so Code Scanning
-      # only surfaces actionable findings. Full unfiltered visibility
-      # is provided by the nightly security-scan.yml workflow.
+      # only surfaces actionable findings. The nightly security-scan.yml
+      # workflow provides a second actionable pass on published images.
       - name: "Trivy: generate SARIF"
         if: always()
         uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # v0.35.0
@@ -120,12 +123,13 @@ jobs:
           format: 'sarif'
           output: 'trivy-${{ matrix.image }}.sarif'
           severity: 'CRITICAL,HIGH'
+          limit-severities-for-sarif: true
           ignore-unfixed: true
           trivyignores: '.trivyignore'
 
       - name: Upload Trivy SARIF
         if: always()
-        uses: github/codeql-action/upload-sarif@c10b8064de6f491fea524254123dbe5e09572f13 # v4.35.1
+        uses: github/codeql-action/upload-sarif@95e58e9a2cdfd71adc6e0353d5c52f41a045d225 # v4.35.2
         with:
           sarif_file: 'trivy-${{ matrix.image }}.sarif'
           category: 'trivy-gate-${{ matrix.image }}'
@@ -187,7 +191,7 @@ jobs:
         uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
 
       - name: Build image
-        uses: docker/build-push-action@d08e5c354a6adb9ed34480a06d141179aa583294 # v7.0.0
+        uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
         with:
           context: .
           file: ${{ matrix.image.name }}/Dockerfile

@@ -1,6 +1,7 @@
 # =============================================================================
 # Nightly Security Scan — Published Images
-# Catches new CVEs disclosed after an image was built.
+# Catches newly disclosed HIGH/CRITICAL CVEs in published images
+# when a fix is already available.
 # Linting is handled by ci-gate.yml (runs on hardening branch / PRs).
 # =============================================================================
 
@@ -8,7 +9,7 @@ name: Nightly Security Scan
 
 on:
   schedule:
-    # Nightly scan to catch new CVEs in published images
+    # Nightly scan to catch new actionable CVEs in published images
     - cron: '0 2 * * *'
   workflow_dispatch:
 
@@ -53,9 +54,18 @@ jobs:
           only-fixed: true
           fail-build: false
 
+      - name: Filter SARIF to high/critical results
+        if: always() && steps.pull.outputs.exists == 'true' && steps.scan.outputs.sarif != ''
+        run: |
+          jq '
+            .runs |= map(
+              .results |= map(select(.level == "error"))
+            )
+          ' "${{ steps.scan.outputs.sarif }}" > "grype-${{ matrix.image }}.sarif"
+
       - name: Upload SARIF
-        uses: github/codeql-action/upload-sarif@c10b8064de6f491fea524254123dbe5e09572f13 # v4.35.1
-        if: always() && steps.pull.outputs.exists == 'true'
+        uses: github/codeql-action/upload-sarif@95e58e9a2cdfd71adc6e0353d5c52f41a045d225 # v4.35.2
+        if: always() && steps.pull.outputs.exists == 'true' && steps.scan.outputs.sarif != ''
         with:
-          sarif_file: ${{ steps.scan.outputs.sarif }}
+          sarif_file: 'grype-${{ matrix.image }}.sarif'
           category: 'grype-nightly-${{ matrix.image }}'

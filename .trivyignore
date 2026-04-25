@@ -6,10 +6,10 @@
 # and cannot be fixed without breaking compatibility. They are reviewed
 # monthly and removed once upstream updates.
 #
-# The nightly security-scan.yml workflow reports ALL vulnerabilities
-# regardless of this file.
+# The nightly security-scan.yml workflow runs Grype independently of this
+# file and reports HIGH/CRITICAL published-image findings with fixes available.
 #
-# Last reviewed: 2026-04-03
+# Last reviewed: 2026-04-25
 #
 # Remediated (2026-04-03):
 #   - gosu 1.14→1.19: All 30+ Go stdlib CVEs eliminated (5 Debian images)
@@ -40,6 +40,22 @@ CVE-2026-26130
 # Microsoft.IdentityModel.JsonWebTokens 6.8.0 → fix in 6.34.0 (bundled by Sonarr upstream)
 # .NET Identity DoS — medium risk, internal API only, no external JWT validation
 CVE-2024-21319
+
+# System.Net.Http 4.3.0 → fix in 4.3.4 (bundled by Sonarr upstream)
+# Redirect credential disclosure — low risk, these apps do not follow attacker-
+# controlled auth redirects in normal container use
+CVE-2018-8292
+
+# System.Private.Uri 4.3.0 → fix in 4.3.2 (bundled by Sonarr/Radarr upstream)
+# Uri/IP parsing DoS — low risk, these apps process trusted local API traffic
+# and are typically reverse-proxied rather than internet-exposed directly
+CVE-2019-0980
+CVE-2019-0981
+
+# System.Text.RegularExpressions 4.3.0 → fix in 4.3.1 (bundled by Sonarr upstream)
+# Regex timeout bypass DoS — low risk, no untrusted regex execution surface is
+# exposed by normal container operation
+CVE-2019-0820
 
 # --- SABnzbd Python transitive dependencies --- REMOVED
 # SABnzbd has been replaced by Transmission (compiled C++ binary, no Python deps)
@@ -210,6 +226,11 @@ CVE-2026-30836
 # smallstep/certificates — ACME provisioner privilege escalation
 CVE-2025-44005
 
+# go.opentelemetry.io/otel/sdk v1.40.0 → fix in v1.43.0 (Caddy transitive dep)
+# BSD-only PATH hijack via the kenv command; this repository builds Linux
+# containers, so the affected BSD-specific code path is unreachable
+CVE-2026-39883
+
 # --- WireGuard UI v0.6.2 Go dependency CVEs ---
 # WireGuard UI v0.6.2 (last release Oct 2023) pins golang.org/x/crypto
 # v0.17.0. Updating causes cascading dependency breakage (wireguard
@@ -244,27 +265,6 @@ CVE-2025-58181
 # golang.org/x/crypto/ssh/agent — DoS via malformed messages
 # WireGuard UI never acts as an SSH agent
 CVE-2025-47914
-
-# --- Syncthing v2.0.15 Go stdlib CVEs ---
-# Syncthing v2.0.15 is built with Go 1.26.0; the fix requires Go 1.26.1.
-# Pre-built binary — we cannot control the compiler version.
-# Review: 2026-05-01
-
-# crypto/x509 — email constraint enforcement (fixed in Go 1.26.1)
-# Syncthing uses self-signed TLS certs for device auth, not email-based X.509
-CVE-2026-27137
-
-# crypto/x509 — panic on malformed certificates (fixed in Go 1.26.1)
-# Low risk, Syncthing only connects to trusted devices via relay/direct
-CVE-2026-27138
-
-# os — FileInfo can escape from a Root (fixed in Go 1.25.8, 1.26.1)
-# Syncthing does use filesystem operations but os.Root is not used in its codebase
-CVE-2026-27139
-
-# html/template — URL escaping in meta content attributes (fixed in Go 1.25.8, 1.26.1)
-# Syncthing's GUI uses html/template but is only accessible on localhost
-CVE-2026-27142
 
 # --- Caddy v2.11.2 transitive dependency CVE ---
 # Caddy v2.11.2 pins google.golang.org/grpc v1.79.1; fix requires v1.79.3.
