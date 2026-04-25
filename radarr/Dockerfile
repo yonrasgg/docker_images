@@ -5,11 +5,12 @@
 # =============================================================================
 
 ARG BASE_IMAGE=debian:bookworm-slim@sha256:f06537653ac770703bc45b4b113475bd402f451e85223f0f2837acbf89ab020a
-ARG GO_IMAGE=golang:1.26-alpine@sha256:2389ebfa5b7f43eeafbd6be0c3700cc46690ef842ad962f6c5bd6be49ed82039
+ARG GO_IMAGE=golang:1.26-alpine@sha256:f85330846cde1e57ca9ec309382da3b8e6ae3ab943d2739500e08c86393a21b1
 
 # --- Stage 1: Build gosu from source with current Go toolchain ---
 # The upstream gosu binary (v1.19) is compiled with Go 1.24.6, which embeds
-# 30+ known Go stdlib CVEs. Building from source with Go 1.26.1 eliminates them.
+# 30+ known Go stdlib CVEs. Building from source with the current pinned
+# Go 1.26 toolchain reduces that exposure.
 FROM ${GO_IMAGE} AS gosu-builder
 
 ARG GOSU_VERSION=1.19
@@ -74,8 +75,8 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/* /tmp/* /var/tmp/*
 
-# gosu built from source in gosu-builder stage (Go 1.26.1) — eliminates
-# 30+ Go stdlib CVEs embedded in the upstream pre-compiled binary (Go 1.24.6).
+# gosu built from source in gosu-builder stage with the current pinned
+# Go 1.26 toolchain, avoiding the older upstream pre-compiled binary (Go 1.24.6).
 COPY --from=gosu-builder /usr/local/bin/gosu /usr/sbin/gosu
 RUN chmod +x /usr/sbin/gosu && gosu --version && gosu nobody true
 

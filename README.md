@@ -152,7 +152,7 @@ main branch ──────► Publish workflow
                       └─ SLSA provenance (BuildKit)
 
 Weekly cron ────────► Rebuild all images (picks up base image patches)
-Nightly cron ───────► Grype scan (all published images)
+Nightly cron ───────► Grype scan (published images, fix-available HIGH/CRITICAL CVEs)
 On-demand ──────────► OpenSSF Scorecard assessment
 ```
 
@@ -160,7 +160,7 @@ On-demand ──────────► OpenSSF Scorecard assessment
 |----------|---------|---------|
 | **CI Gate** | Push to `hardening`, PR to `main` | Validate: lint, build, scan, smoke test |
 | **Publish** | Push to `main`, weekly cron | Build, sign, attest, push to registry |
-| **Nightly Scan** | Daily cron | Grype scan of published images for new CVEs |
+| **Nightly Scan** | Daily cron | Grype scan of published images for new HIGH/CRITICAL CVEs with fixes available |
 | **Scorecard** | Push to `main`, weekly cron | OpenSSF supply chain health assessment |
 
 - **Gate**: `✅ All CI Gates Passed` is required by branch protection before merge
@@ -198,7 +198,7 @@ WireGuard UI, Syncthing, and Caddy use `alpine:3.21` because:
 - All are statically-compiled Go binaries with zero native library dependencies
 - WireGuard UI is compiled from source (`CGO_ENABLED=0`) in a Go builder stage
 - Caddy is compiled from source via `xcaddy` (`CGO_ENABLED=0`) with optimized flags (`-s -w`, `-trimpath`) and optional plugins
-- Syncthing uses official pre-built release binaries
+- Syncthing is built from the official source release tarball with the pinned Go 1.26 toolchain
 - Alpine provides the smallest possible runtime (~7 MB base) for static binaries
 - Runtime dependencies are minimal: `su-exec`, `tini`, `tzdata`
 - WireGuard UI additionally installs `wireguard-tools` and `iproute2` for interface management
@@ -211,7 +211,7 @@ Both base OS families share identical hardening and stripping scripts (`shared/h
 ├── sonarr/          # Sonarr Dockerfile + entrypoint
 ├── radarr/          # Radarr Dockerfile + entrypoint
 ├── transmission/    # Transmission Dockerfile + entrypoint
-├── prowlarr/         # Prowlarr Dockerfile + entrypoint
+├── prowlarr/        # Prowlarr Dockerfile + entrypoint
 ├── plex/            # Plex Dockerfile + entrypoint
 ├── dashy/           # Dashy Dockerfile + entrypoint (Alpine)
 ├── wireguard-ui/    # WireGuard UI Dockerfile + entrypoint (Alpine)

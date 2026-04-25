@@ -6,8 +6,8 @@
 # and cannot be fixed without breaking compatibility. They are reviewed
 # monthly and removed once upstream updates.
 #
-# The nightly security-scan.yml workflow reports ALL vulnerabilities
-# regardless of this file.
+# The nightly security-scan.yml workflow runs Grype independently of this
+# file and reports HIGH/CRITICAL published-image findings with fixes available.
 #
 # Last reviewed: 2026-04-03
 #
@@ -244,27 +244,6 @@ CVE-2025-58181
 # golang.org/x/crypto/ssh/agent — DoS via malformed messages
 # WireGuard UI never acts as an SSH agent
 CVE-2025-47914
-
-# --- Syncthing v2.0.15 Go stdlib CVEs ---
-# Syncthing v2.0.15 is built with Go 1.26.0; the fix requires Go 1.26.1.
-# Pre-built binary — we cannot control the compiler version.
-# Review: 2026-05-01
-
-# crypto/x509 — email constraint enforcement (fixed in Go 1.26.1)
-# Syncthing uses self-signed TLS certs for device auth, not email-based X.509
-CVE-2026-27137
-
-# crypto/x509 — panic on malformed certificates (fixed in Go 1.26.1)
-# Low risk, Syncthing only connects to trusted devices via relay/direct
-CVE-2026-27138
-
-# os — FileInfo can escape from a Root (fixed in Go 1.25.8, 1.26.1)
-# Syncthing does use filesystem operations but os.Root is not used in its codebase
-CVE-2026-27139
-
-# html/template — URL escaping in meta content attributes (fixed in Go 1.25.8, 1.26.1)
-# Syncthing's GUI uses html/template but is only accessible on localhost
-CVE-2026-27142
 
 # --- Caddy v2.11.2 transitive dependency CVE ---
 # Caddy v2.11.2 pins google.golang.org/grpc v1.79.1; fix requires v1.79.3.
