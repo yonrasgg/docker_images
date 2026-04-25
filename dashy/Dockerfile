@@ -9,6 +9,7 @@ ARG NODE_IMAGE=node:20-alpine
 # --- Stage 1: Download and build ---
 FROM ${NODE_IMAGE} AS builder
 
+# renovate: datasource=github-releases depName=Lissy93/dashy
 ARG DASHY_VERSION=3.3.0
 
 WORKDIR /app

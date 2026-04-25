@@ -26,6 +26,7 @@ RUN CGO_ENABLED=0 go build -ldflags='-s -w' -o /usr/local/bin/gosu .
 # --- Stage 2: Download Plex ---
 FROM ${BASE_IMAGE} AS downloader
 
+# renovate: datasource=custom.plex depName=plex versioning=loose
 ARG PLEX_VERSION=1.43.1.10611-1e34174b1
 ARG TARGETARCH
 

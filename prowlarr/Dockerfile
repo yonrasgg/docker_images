@@ -27,6 +27,7 @@ RUN CGO_ENABLED=0 go build -ldflags='-s -w' -o /usr/local/bin/gosu .
 FROM ${BASE_IMAGE} AS downloader
 
 ARG PROWLARR_BRANCH=master
+# renovate: datasource=github-releases depName=Prowlarr/Prowlarr
 ARG PROWLARR_VERSION=2.3.5.5327
 ARG TARGETARCH
 

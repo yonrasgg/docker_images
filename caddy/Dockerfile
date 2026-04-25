@@ -11,6 +11,7 @@ ARG ALPINE_IMAGE=alpine:3.21@sha256:c3f8e73fdb79deaebaa2037150150191b9dcbfba68b4
 # --- Stage 1: Build Caddy from source with xcaddy ---
 FROM ${GO_IMAGE} AS builder
 
+# renovate: datasource=github-releases depName=caddyserver/caddy
 ARG CADDY_VERSION=v2.11.2
 # Add xcaddy plugins as build args for easy customization
 ARG CADDY_PLUGINS=""

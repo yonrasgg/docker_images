@@ -158,14 +158,14 @@ On-demand ──────────► OpenSSF Scorecard assessment
 
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
-| **CI Gate** | Push to `hardening`, PR to `main` | Validate: lint, build, scan, smoke test |
+| **CI Gate** | Push to `hardening`, PR to `hardening` or `main` | Validate: lint, build, scan, smoke test |
 | **Publish** | Push to `main`, weekly cron | Build, sign, attest, push to registry |
 | **Nightly Scan** | Daily cron | Grype scan of published images for new HIGH/CRITICAL CVEs with fixes available |
 | **Scorecard** | Push to `main`, weekly cron | OpenSSF supply chain health assessment |
 
 - **Gate**: `✅ All CI Gates Passed` is required by branch protection before merge
 - **Pinned**: All CI/CD actions are pinned by commit SHA
-- **Monitor**: Dependabot watches base images, dependencies, and Actions weekly
+- **Monitor**: Renovate opens PRs against `hardening` for Docker base images, pinned app releases, and GitHub Actions
 
 ## Architecture Decisions
 
@@ -220,7 +220,8 @@ Both base OS families share identical hardening and stripping scripts (`shared/h
 ├── shared/          # Common hardening + stripping scripts
 │   ├── hardening.sh # SUID/SGID removal, cleanup, crontab purge
 │   └── strip.sh     # Package manager + tool removal (Debian + Alpine)
-├── .github/         # CI/CD workflows, Dependabot, Scorecard
+├── .github/         # CI/CD workflows, repository instructions, Scorecard
+├── renovate.json5   # Renovate config for hardening-targeted update PRs
 ├── SECURITY.md      # Security policy, vulnerability reporting, verification
 ├── CONTRIBUTING.md  # Development and contribution guide
 └── CODEOWNERS       # Code ownership and review requirements

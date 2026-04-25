@@ -11,6 +11,7 @@ ARG ALPINE_IMAGE=alpine:3.21@sha256:c3f8e73fdb79deaebaa2037150150191b9dcbfba68b4
 FROM ${GO_IMAGE} AS builder
 
 ARG TARGETARCH
+# renovate: datasource=github-releases depName=syncthing/syncthing
 ARG SYNCTHING_VERSION=v2.0.16
 
 WORKDIR /src

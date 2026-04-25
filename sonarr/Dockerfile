@@ -27,6 +27,7 @@ RUN CGO_ENABLED=0 go build -ldflags='-s -w' -o /usr/local/bin/gosu .
 FROM ${BASE_IMAGE} AS downloader
 
 ARG SONARR_BRANCH=main
+# renovate: datasource=github-releases depName=Sonarr/Sonarr
 ARG SONARR_VERSION=4.0.17.2952
 ARG TARGETARCH
 
