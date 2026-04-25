@@ -108,8 +108,10 @@ jobs:
           context: ${{ matrix.image.context }}
           file: ${{ matrix.image.dockerfile }}
           platforms: linux/amd64
+          pull: true
           push: false
           load: true
+          no-cache: true
           tags: ${{ env.IMAGE_PREFIX }}/${{ matrix.image.name }}:preflight
           cache-from: type=gha,scope=${{ matrix.image.name }}
 
@@ -150,7 +152,9 @@ jobs:
           context: ${{ matrix.image.context }}
           file: ${{ matrix.image.dockerfile }}
           platforms: linux/amd64
+          pull: true
           push: true
+          no-cache: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha,scope=${{ matrix.image.name }}
