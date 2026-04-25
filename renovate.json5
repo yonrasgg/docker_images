@@ -1,0 +1,35 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended"
+  ],
+  "baseBranches": [
+    "hardening"
+  ],
+  "labels": [
+    "dependencies"
+  ],
+  "dependencyDashboard": true,
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "Update pinned application versions in Dockerfiles",
+      "managerFilePatterns": [
+        "/(^|/)(caddy|dashy|plex|prowlarr|radarr|sonarr|syncthing|transmission|wireguard-ui)/Dockerfile$/"
+      ],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)(?: versioning=(?<versioning>\\S+))?\\s+ARG [A-Z_]+_VERSION=(?<currentValue>\\S+)"
+      ],
+      "versioningTemplate": "{{#if versioning}}{{{versioning}}}{{else}}semver-coerced{{/if}}"
+    }
+  ],
+  "customDatasources": {
+    "plex": {
+      "defaultRegistryUrlTemplate": "https://plex.tv/api/downloads/5.json",
+      "format": "json",
+      "transformTemplates": [
+        "{\"releases\":[{\"version\": computer.Linux.version}],\"sourceUrl\":\"https://www.plex.tv/media-server-downloads/\",\"homepage\":\"https://www.plex.tv/\"}"
+      ]
+    }
+  }
+}

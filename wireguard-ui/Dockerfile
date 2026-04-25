@@ -14,6 +14,7 @@ ARG ALPINE_IMAGE=alpine:3.21@sha256:c3f8e73fdb79deaebaa2037150150191b9dcbfba68b4
 # --- Stage 1: Compile from source ---
 FROM ${GO_IMAGE} AS builder
 
+# renovate: datasource=github-releases depName=ngoduykhanh/wireguard-ui
 ARG WG_UI_VERSION=v0.6.2
 
 WORKDIR /src

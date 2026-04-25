@@ -78,7 +78,7 @@ shellcheck sonarr/entrypoint.sh shared/hardening.sh shared/strip.sh
    - `.github/workflows/ci-gate.yml` (hadolint, build-and-scan, smoke-test)
    - `.github/workflows/build-push.yml` (build matrix with platforms)
    - `.github/workflows/security-scan.yml` (grype-scan matrix)
-6. Add Dependabot config in `.github/dependabot.yml`
+6. Add Renovate coverage in `renovate.json5` for any new pinned app versions or custom version sources
 7. Update documentation:
    - `README.md` — image table, architecture section, repo structure tree
    - `SECURITY.md` — supported versions table
@@ -87,6 +87,8 @@ shellcheck sonarr/entrypoint.sh shared/hardening.sh shared/strip.sh
 ## Branching Workflow
 
 All work happens on the `hardening` branch. The `main` branch only receives tested, scanned, compliant code via PR.
+
+Renovate opens dependency update PRs against `hardening` for Docker base images, GitHub Actions, and the pinned application versions declared in the image Dockerfiles. `CI Gate` runs on PRs targeting `hardening` and `main`, so automated updates are validated before merge.
 
 ```bash
 # 1. Start from the hardening branch
@@ -109,6 +111,7 @@ git push origin hardening
 #    → CI Gate runs again on the PR
 #    → CODEOWNER review required
 #    → Squash merge when approved
+#    → Review Renovate PRs to `hardening` the same way before promoting them to `main`
 
 # 6. After merge to main:
 #    → Publish workflow runs automatically

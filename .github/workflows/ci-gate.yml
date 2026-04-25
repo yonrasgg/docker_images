@@ -1,7 +1,7 @@
 # =============================================================================
 # CI Gate — Quality & Security Validation
-# Runs on the hardening branch and on PRs targeting main.
-# ALL checks here must pass before a PR can be merged into main.
+# Runs on the hardening branch and on PRs targeting hardening or main.
+# ALL checks here must pass before a PR can be merged into hardening or main.
 # Nothing is published — this is the "prove it works" stage.
 # =============================================================================
 
@@ -26,7 +26,8 @@ on:
       - '.trivyignore'
       - '.dockerignore'
   pull_request:
-    branches: [main]
+    branches: [hardening, main]
+  workflow_dispatch:
 
 permissions: read-all
 

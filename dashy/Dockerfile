@@ -9,15 +9,16 @@ ARG NODE_IMAGE=node:20-alpine
 # --- Stage 1: Download and build ---
 FROM ${NODE_IMAGE} AS builder
 
+# renovate: datasource=github-releases depName=Lissy93/dashy
+ARG DASHY_VERSION=3.3.0
+
 WORKDIR /app
 
 RUN apk add --no-cache curl git
 
-# Download latest Dashy release
+# Download the pinned Dashy release
 # hadolint ignore=DL4006
 RUN set -eux; \
-    DASHY_VERSION=$(curl -sL https://api.github.com/repos/Lissy93/dashy/releases/latest | \
-      grep '"tag_name"' | sed 's/.*"tag_name": *"//;s/".*//'); \
     echo "Downloading Dashy ${DASHY_VERSION}"; \
     curl -fsSL -o /tmp/dashy.tar.gz \
       "https://github.com/Lissy93/dashy/archive/refs/tags/${DASHY_VERSION}.tar.gz"; \

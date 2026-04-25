@@ -27,6 +27,8 @@ RUN CGO_ENABLED=0 go build -ldflags='-s -w' -o /usr/local/bin/gosu .
 FROM ${BASE_IMAGE} AS downloader
 
 ARG RADARR_BRANCH=master
+# renovate: datasource=github-releases depName=Radarr/Radarr versioning=loose
+ARG RADARR_VERSION=6.1.1.10360
 ARG TARGETARCH
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
@@ -42,7 +44,7 @@ RUN set -eux; \
       *) echo "Unsupported architecture: ${TARGETARCH}" && exit 1 ;; \
     esac; \
     curl -fsSL -o /tmp/radarr.tar.gz \
-      "https://radarr.servarr.com/v1/update/${RADARR_BRANCH}/updatefile?os=linux&runtime=netcore&arch=${ARCH}"; \
+      "https://github.com/Radarr/Radarr/releases/download/v${RADARR_VERSION}/Radarr.${RADARR_BRANCH}.${RADARR_VERSION}.linux-core-${ARCH}.tar.gz"; \
     mkdir -p /opt/radarr; \
     tar -xzf /tmp/radarr.tar.gz -C /opt/radarr --strip-components=1; \
     rm -f /tmp/radarr.tar.gz; \

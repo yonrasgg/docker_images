@@ -26,6 +26,7 @@ RUN CGO_ENABLED=0 go build -ldflags='-s -w' -o /usr/local/bin/gosu .
 # --- Stage 2: Compile Transmission from source ---
 FROM ${BASE_IMAGE} AS builder
 
+# renovate: datasource=github-releases depName=transmission/transmission
 ARG TRANSMISSION_VERSION=4.1.1
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]

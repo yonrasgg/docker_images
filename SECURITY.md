@@ -2,7 +2,7 @@
 
 ## Supported Versions
 
-Only the `latest` tag of each image receives security updates. All images are rebuilt weekly and scanned nightly.
+Only the `latest` tag of each image receives security updates. Pinned upstream application versions are synchronized automatically onto `hardening`, rebuilt weekly on `main`, and scanned nightly.
 
 | Image   | Supported |
 |---------|-----------|
@@ -83,7 +83,7 @@ docker inspect ghcr.io/yonrasgg/sonarr:latest --format '{{json .Config.Labels}}'
 - **SUID/SGID removal**: All unnecessary privileged binaries are stripped
 - **Minimal packages**: Only runtime dependencies are installed
 - **Automated scanning**: Trivy (per-build gate) + Grype (nightly) + Hadolint (Dockerfile lint) + ShellCheck
-- **Dependabot**: Monitors base images, dependencies, and GitHub Actions weekly
+- **Renovate**: Monitors Docker base images, pinned application releases, and GitHub Actions via PRs to `hardening`
 - **Pinned actions**: All CI/CD actions are pinned by commit SHA to prevent supply chain attacks
 - **No secrets in images**: Configuration is injected at runtime via environment variables and volumes
 - **OpenSSF Scorecard**: Automated supply chain security assessment
