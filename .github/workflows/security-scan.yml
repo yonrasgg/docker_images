@@ -59,7 +59,7 @@ jobs:
         run: |
           jq '
             .runs |= map(
-              .results |= map(select(.level == "error"))
+              .results |= map(select(.level == "error" or .level == "warning"))
             )
           ' "${{ steps.scan.outputs.sarif }}" > "grype-${{ matrix.image }}.sarif"
 
