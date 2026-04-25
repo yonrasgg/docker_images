@@ -2,7 +2,7 @@
 
 ## Supported Versions
 
-Only the `latest` tag of each image receives security updates. All images are rebuilt weekly and scanned nightly.
+Only the `latest` tag of each image receives security updates. Pinned upstream application versions are synchronized automatically onto `hardening`, rebuilt weekly on `main`, and scanned nightly.
 
 | Image   | Supported |
 |---------|-----------|

@@ -88,6 +88,8 @@ shellcheck sonarr/entrypoint.sh shared/hardening.sh shared/strip.sh
 
 All work happens on the `hardening` branch. The `main` branch only receives tested, scanned, compliant code via PR.
 
+Upstream application releases are synchronized automatically by `.github/workflows/upstream-version-sync.yml`. That workflow updates pinned app versions on `hardening`, dispatches `CI Gate` for the updated commit, and opens the `hardening -> main` PR if one does not already exist.
+
 ```bash
 # 1. Start from the hardening branch
 git checkout hardening
@@ -109,6 +111,7 @@ git push origin hardening
 #    → CI Gate runs again on the PR
 #    → CODEOWNER review required
 #    → Squash merge when approved
+#    → If upstream automation updated hardening first, review that PR once the dispatched CI Gate is green
 
 # 6. After merge to main:
 #    → Publish workflow runs automatically

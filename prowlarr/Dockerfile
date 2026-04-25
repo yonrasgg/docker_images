@@ -27,6 +27,7 @@ RUN CGO_ENABLED=0 go build -ldflags='-s -w' -o /usr/local/bin/gosu .
 FROM ${BASE_IMAGE} AS downloader
 
 ARG PROWLARR_BRANCH=master
+ARG PROWLARR_VERSION=2.3.5.5327
 ARG TARGETARCH
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
@@ -42,7 +43,7 @@ RUN set -eux; \
       *) echo "Unsupported architecture: ${TARGETARCH}" && exit 1 ;; \
     esac; \
     curl -fsSL -o /tmp/prowlarr.tar.gz \
-      "https://prowlarr.servarr.com/v1/update/${PROWLARR_BRANCH}/updatefile?os=linux&runtime=netcore&arch=${ARCH}"; \
+      "https://github.com/Prowlarr/Prowlarr/releases/download/v${PROWLARR_VERSION}/Prowlarr.${PROWLARR_BRANCH}.${PROWLARR_VERSION}.linux-core-${ARCH}.tar.gz"; \
     mkdir -p /opt/prowlarr; \
     tar -xzf /tmp/prowlarr.tar.gz -C /opt/prowlarr --strip-components=1; \
     rm -f /tmp/prowlarr.tar.gz; \

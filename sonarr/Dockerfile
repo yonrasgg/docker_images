@@ -27,6 +27,7 @@ RUN CGO_ENABLED=0 go build -ldflags='-s -w' -o /usr/local/bin/gosu .
 FROM ${BASE_IMAGE} AS downloader
 
 ARG SONARR_BRANCH=main
+ARG SONARR_VERSION=4.0.17.2952
 ARG TARGETARCH
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
@@ -42,7 +43,7 @@ RUN set -eux; \
       *) echo "Unsupported architecture: ${TARGETARCH}" && exit 1 ;; \
     esac; \
     curl -fsSL -o /tmp/sonarr.tar.gz \
-      "https://services.sonarr.tv/v1/download/${SONARR_BRANCH}/latest?version=4&os=linux&arch=${ARCH}"; \
+      "https://github.com/Sonarr/Sonarr/releases/download/v${SONARR_VERSION}/Sonarr.${SONARR_BRANCH}.${SONARR_VERSION}.linux-${ARCH}.tar.gz"; \
     mkdir -p /opt/sonarr; \
     tar -xzf /tmp/sonarr.tar.gz -C /opt/sonarr --strip-components=1; \
     rm -f /tmp/sonarr.tar.gz; \
