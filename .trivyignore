@@ -287,6 +287,16 @@ CVE-2026-33748
 # keep monitored until upstream Portainer dependency refresh lands
 CVE-2026-35469
 
+# golang stdlib in upstream Portainer v2.39.1 binaries (Go 1.25.7/1.25.8)
+# Trivy currently flags fixed HIGH DoS issues resolved in Go 1.25.9/1.26.2.
+# We consume upstream signed release artifacts; no patched Portainer release
+# is available yet with the fixed Go stdlib. Temporary acceptance until
+# upstream republishes Portainer with updated toolchain.
+# Review: 2026-05-01
+CVE-2026-32280
+CVE-2026-32281
+CVE-2026-32283
+
 # golang.org/x/crypto/ssh — GSSAPI authentication DoS via unbounded memory
 # WireGuard UI never uses SSH/GSSAPI authentication
 CVE-2025-58181
