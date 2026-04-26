@@ -120,6 +120,7 @@ For the full media stack with TLS, VPN access, and nftables firewall, see the [H
 | `PGID` | `1000` | Group ID for the service process |
 | `TZ` | `UTC` | Timezone (e.g., `America/Costa_Rica`) |
 | `UMASK` | `0022` | File creation mask |
+| `DOCKER_GID` | *(empty)* | Host Docker group ID for `/var/run/docker.sock` access (portainer only) |
 | `PLEX_CLAIM` | *(empty)* | Plex claim token (plex image only, first run) |
 
 ## CI/CD Pipeline

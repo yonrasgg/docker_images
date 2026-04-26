@@ -30,8 +30,12 @@ RUN set -eux; \
       "https://github.com/portainer/portainer/releases/download/${PORTAINER_VERSION}/${ASSET}.tar.gz"; \
     curl -fsSL -o "/tmp/${ASSET}-checksum.txt" \
       "https://github.com/portainer/portainer/releases/download/${PORTAINER_VERSION}/${ASSET}-checksum.txt"; \
-    awk -v f="${ASSET}.tar.gz" '$2=="(" f ")" && $3=="=" {print $4 "  /tmp/" f}' "/tmp/${ASSET}-checksum.txt" \
-      | sha256sum -c -; \
+    checksum_line="$(awk -v f="${ASSET}.tar.gz" '$2=="(" f ")" && $3=="=" {print $4 "  /tmp/" f}' "/tmp/${ASSET}-checksum.txt")"; \
+    [ -n "${checksum_line}" ] || { \
+      echo "Failed to find checksum for ${ASSET}.tar.gz in /tmp/${ASSET}-checksum.txt" >&2; \
+      exit 1; \
+    }; \
+    printf '%s\n' "${checksum_line}" | sha256sum -c -; \
     mkdir -p /build/portainer; \
     tar -xzf "/tmp/${ASSET}.tar.gz" -C /build/portainer --strip-components=1; \
     rm -f "/tmp/${ASSET}.tar.gz" "/tmp/${ASSET}-checksum.txt"
