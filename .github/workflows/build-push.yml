@@ -19,6 +19,7 @@ on:
       - 'wireguard-ui/**'
       - 'syncthing/**'
       - 'caddy/**'
+      - 'portainer/**'
       - 'shared/**'
       - '.github/workflows/build-push.yml'
   schedule:
@@ -72,6 +73,9 @@ jobs:
           - name: caddy
             context: .
             dockerfile: caddy/Dockerfile
+          - name: portainer
+            context: .
+            dockerfile: portainer/Dockerfile
 
     steps:
       - name: Checkout repository

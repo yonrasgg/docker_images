@@ -61,6 +61,11 @@
 !caddy/entrypoint.sh
 !caddy/Caddyfile
 
+# Portainer
+!portainer/
+!portainer/Dockerfile
+!portainer/entrypoint.sh
+
 # ---- DENY: Anything that sneaks into allowed directories ----
 # Even inside allowed dirs, block sensitive patterns as defense-in-depth
 **/.env

@@ -36,6 +36,9 @@ docker build -f dashy/Dockerfile -t dashy:dev .
 docker build -f wireguard-ui/Dockerfile -t wireguard-ui:dev .
 docker build -f syncthing/Dockerfile -t syncthing:dev .
 docker build -f caddy/Dockerfile -t caddy:dev .
+
+# Build a specific image (Alpine release artifact)
+docker build -f portainer/Dockerfile -t portainer:dev .
 ```
 
 ## Testing an Image
@@ -64,7 +67,7 @@ shellcheck sonarr/entrypoint.sh shared/hardening.sh shared/strip.sh
    - Multi-stage build (builder + runtime)
    - **Debian `bookworm-slim`**: for .NET/media apps (sonarr, radarr, prowlarr, plex) or C++ apps (transmission)
    - **Alpine `node:20-alpine`**: for pure Node.js apps (dashy)
-   - **Alpine `alpine:3.21`**: for statically-compiled Go binaries (wireguard-ui, syncthing, caddy)
+   - **Alpine `alpine:3.21`**: for statically-compiled Go binaries and verified release artifacts (wireguard-ui, syncthing, caddy, portainer)
    - See [Architecture Decisions](README.md#architecture-decisions) for rationale
    - Apply `shared/hardening.sh` for security hardening
    - Apply `shared/strip.sh` as the final build step (after user creation)

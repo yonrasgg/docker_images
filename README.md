@@ -23,6 +23,7 @@ Every image is built with multi-stage builds, runs as a non-root user, is scanne
 | **wireguard-ui** | 5000 | WireGuard VPN web management UI | `docker pull ghcr.io/yonrasgg/wireguard-ui:latest` |
 | **syncthing** | 8384 | Continuous file synchronization | `docker pull ghcr.io/yonrasgg/syncthing:latest` |
 | **caddy** | 80, 443 | Reverse proxy with automatic HTTPS | `docker pull ghcr.io/yonrasgg/caddy:latest` |
+| **portainer** | 9000, 9443 | Container management UI for Docker environments | `docker pull ghcr.io/yonrasgg/portainer:latest` |
 
 ## Supply Chain Security
 
@@ -203,6 +204,15 @@ WireGuard UI, Syncthing, and Caddy use `alpine:3.21` because:
 - Runtime dependencies are minimal: `su-exec`, `tini`, `tzdata`
 - WireGuard UI additionally installs `wireguard-tools` and `iproute2` for interface management
 
+### Alpine for Portainer
+
+Portainer uses `alpine:3.21` because:
+
+- Portainer publishes official Linux release artifacts that run cleanly on Alpine
+- Runtime requirements are minimal (`su-exec`, `tini`, `tzdata`, `ca-certificates`)
+- The image verifies upstream SHA256 checksums before shipping binaries to runtime
+- Alpine keeps the final attack surface small while preserving Portainer functionality
+
 Both base OS families share identical hardening and stripping scripts (`shared/hardening.sh`, `shared/strip.sh`) with automatic OS detection.
 
 ## Repository Structure
@@ -217,6 +227,7 @@ Both base OS families share identical hardening and stripping scripts (`shared/h
 ├── wireguard-ui/    # WireGuard UI Dockerfile + entrypoint (Alpine)
 ├── syncthing/       # Syncthing Dockerfile + entrypoint (Alpine)
 ├── caddy/           # Caddy reverse proxy Dockerfile + entrypoint (Alpine)
+├── portainer/       # Portainer Dockerfile + entrypoint (Alpine)
 ├── shared/          # Common hardening + stripping scripts
 │   ├── hardening.sh # SUID/SGID removal, cleanup, crontab purge
 │   └── strip.sh     # Package manager + tool removal (Debian + Alpine)
