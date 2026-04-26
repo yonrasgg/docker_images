@@ -25,7 +25,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        image: [sonarr, radarr, transmission, prowlarr, plex, dashy, wireguard-ui, syncthing, caddy]
+        image: [sonarr, radarr, transmission, prowlarr, plex, dashy, wireguard-ui, syncthing, caddy, portainer]
     steps:
       - name: Pull latest image
         id: pull
@@ -54,14 +54,21 @@ jobs:
           only-fixed: true
           fail-build: false
 
-      - name: Filter SARIF to HIGH/CRITICAL results (error level only)
+      - name: Filter SARIF to actionable error-level results
         if: always() && steps.pull.outputs.exists == 'true' && steps.scan.outputs.sarif != ''
         run: |
+          IGNORED_CVES_JSON="$(awk '/^CVE-[0-9]{4}-[0-9]+$/{print $1}' .trivyignore | sort -u | jq -R . | jq -s .)"
           jq '
+            def cve_prefix: (try (.ruleId | capture("^(?<cve>CVE-[0-9]{4}-[0-9]+)").cve) catch "");
             .runs |= map(
-              .results |= map(select(.level == "error" or .level == "warning"))
+              .results |= map(
+                select(
+                  .level == "error"
+                  and ((cve_prefix) as $cve | ($cve == "" or ($ignored | index($cve) | not)))
+                )
+              )
             )
-          ' "${{ steps.scan.outputs.sarif }}" > "grype-${{ matrix.image }}.sarif"
+          ' --argjson ignored "${IGNORED_CVES_JSON}" "${{ steps.scan.outputs.sarif }}" > "grype-${{ matrix.image }}.sarif"
 
       - name: Upload SARIF
         uses: github/codeql-action/upload-sarif@95e58e9a2cdfd71adc6e0353d5c52f41a045d225 # v4.35.2

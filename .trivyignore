@@ -258,6 +258,45 @@ CVE-2025-22870
 # WireGuard UI runs behind a reverse proxy; internal HTTP not internet-exposed
 CVE-2023-45288
 
+# --- Portainer v2.39.1 transitive Go dependency CVEs ---
+# Portainer bundles Docker ecosystem libraries that currently pull vulnerable
+# module versions. Attempting direct module bumps (docker/cli + buildkit +
+# spdystream) against the v2.39.1 source tag causes compile-time type conflicts
+# across docker vs moby API packages in Portainer's dependency graph.
+# Keep Portainer pinned to the latest upstream release and remove these entries
+# as soon as Portainer publishes a release with updated dependencies.
+# Review: 2026-05-01
+
+# github.com/docker/cli — Windows plugin local privilege escalation
+# Linux containers in this repository do not execute Docker CLI plugins
+CVE-2025-15558
+
+# github.com/docker/docker — authorization bypass in Moby
+# Risk is gated by Portainer's own authorization model and the target Docker
+# daemon policy; pending upstream dependency update in Portainer release
+CVE-2026-34040
+
+# github.com/moby/buildkit — untrusted frontend/code execution and path issues
+# Portainer runtime image does not run BuildKit frontends directly; fix pending
+# upstream dependency update due docker/moby API incompatibility on manual bump
+CVE-2026-33747
+CVE-2026-33748
+
+# github.com/moby/spdystream — DoS in SPDY streaming stack
+# Exploitable path requires SPDY stream handling in Kubernetes interactions;
+# keep monitored until upstream Portainer dependency refresh lands
+CVE-2026-35469
+
+# golang stdlib in upstream Portainer v2.39.1 binaries (Go 1.25.7/1.25.8)
+# Trivy currently flags fixed HIGH DoS issues resolved in Go 1.25.9/1.26.2.
+# We consume upstream signed release artifacts; no patched Portainer release
+# is available yet with the fixed Go stdlib. Temporary acceptance until
+# upstream republishes Portainer with updated toolchain.
+# Review: 2026-05-01
+CVE-2026-32280
+CVE-2026-32281
+CVE-2026-32283
+
 # golang.org/x/crypto/ssh — GSSAPI authentication DoS via unbounded memory
 # WireGuard UI never uses SSH/GSSAPI authentication
 CVE-2025-58181

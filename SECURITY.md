@@ -15,6 +15,7 @@ Only the `latest` tag of each image receives security updates. Pinned upstream a
 | wireguard-ui | ✅ latest |
 | syncthing | ✅ latest |
 | caddy   | ✅ latest |
+| portainer | ✅ latest |
 
 ## Supply Chain Security
 
