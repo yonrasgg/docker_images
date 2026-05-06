@@ -42,7 +42,8 @@ LABEL maintainer="yonrasgg" \
 RUN apk update && apk upgrade && \
     apk add --no-cache \
       ca-certificates \
-      openssl \
+      libcrypto3 \
+      libssl3 \
       su-exec \
       tini \
       tzdata && \
