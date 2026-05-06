@@ -16,6 +16,7 @@ Only the `latest` tag of each image receives security updates. Pinned upstream a
 | syncthing | ✅ latest |
 | caddy   | ✅ latest |
 | portainer | ✅ latest |
+| vaultwarden | ✅ latest |
 
 ## Supply Chain Security
 
@@ -80,7 +81,7 @@ docker inspect ghcr.io/yonrasgg/sonarr:latest --format '{{json .Config.Labels}}'
 ## Security Practices
 
 - **Multi-stage builds**: Build dependencies never ship in the runtime image
-- **Non-root execution**: All services run as unprivileged user via `gosu`
+- **Non-root execution**: All services run as unprivileged user via `gosu` (Debian) or `su-exec` (Alpine)
 - **SUID/SGID removal**: All unnecessary privileged binaries are stripped
 - **Minimal packages**: Only runtime dependencies are installed
 - **Automated scanning**: Trivy (per-build gate) + Grype (nightly) + Hadolint (Dockerfile lint) + ShellCheck

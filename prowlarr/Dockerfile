@@ -73,6 +73,9 @@ RUN apt-get update && \
       libssl3 \
       tini \
       tzdata && \
+    if dpkg-query -W -f='${Status}' openssl 2>/dev/null | grep -q "install ok installed"; then \
+      apt-get purge -y --auto-remove openssl; \
+    fi && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/* /tmp/* /var/tmp/*
 
