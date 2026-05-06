@@ -231,6 +231,11 @@ CVE-2025-44005
 # containers, so the affected BSD-specific code path is unreachable
 CVE-2026-39883
 
+# go.opentelemetry.io/otel v1.40.0 → fix in 1.41.0 (Caddy transitive dep)
+# Excessive memory allocation via multi-value baggage headers. Low risk since Caddy
+# is used internally and parses trusted traffic mostly. No patched Caddy release available yet.
+CVE-2026-29181
+
 # --- WireGuard UI v0.6.2 Go dependency CVEs ---
 # WireGuard UI v0.6.2 (last release Oct 2023) pins golang.org/x/crypto
 # v0.17.0. Updating causes cascading dependency breakage (wireguard
