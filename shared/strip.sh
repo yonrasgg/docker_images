@@ -39,6 +39,9 @@ rm -rf /usr/bin/find /usr/bin/locate /usr/bin/xargs
 echo "[strip] Removing curl CLI (runtime healthchecks do not rely on curl CLI)..."
 rm -f /usr/bin/curl
 
+echo "[strip] Removing openssl CLI (runtime does not require openssl command)..."
+rm -f /usr/bin/openssl
+
 echo "[strip] Removing user-management tools..."
 if [ "$OS_FAMILY" = "alpine" ]; then
     # Alpine uses BusyBox symlinks; remove standalone shadow tools if present

@@ -20,6 +20,7 @@ on:
       - 'syncthing/**'
       - 'caddy/**'
       - 'portainer/**'
+      - 'vaultwarden/**'
       - 'shared/**'
       - '.github/workflows/build-push.yml'
   schedule:
@@ -76,6 +77,9 @@ jobs:
           - name: portainer
             context: .
             dockerfile: portainer/Dockerfile
+          - name: vaultwarden
+            context: .
+            dockerfile: vaultwarden/Dockerfile
 
     steps:
       - name: Checkout repository

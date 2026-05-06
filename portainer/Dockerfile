@@ -11,7 +11,7 @@ FROM ${ALPINE_IMAGE} AS builder
 
 ARG TARGETARCH
 # renovate: datasource=github-releases depName=portainer/portainer
-ARG PORTAINER_VERSION=2.39.1
+ARG PORTAINER_VERSION=2.41.0
 
 RUN apk add --no-cache ca-certificates curl tar
 

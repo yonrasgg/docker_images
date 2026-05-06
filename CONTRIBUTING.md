@@ -39,6 +39,9 @@ docker build -f caddy/Dockerfile -t caddy:dev .
 
 # Build a specific image (Alpine release artifact)
 docker build -f portainer/Dockerfile -t portainer:dev .
+
+# Build a specific image (Alpine Rust)
+docker build -f vaultwarden/Dockerfile -t vaultwarden:dev .
 ```
 
 ## Testing an Image
@@ -67,7 +70,7 @@ shellcheck sonarr/entrypoint.sh shared/hardening.sh shared/strip.sh
    - Multi-stage build (builder + runtime)
    - **Debian `bookworm-slim`**: for .NET/media apps (sonarr, radarr, prowlarr, plex) or C++ apps (transmission)
    - **Alpine `node:20-alpine`**: for pure Node.js apps (dashy)
-   - **Alpine `alpine:3.21`**: for statically-compiled Go binaries and verified release artifacts (wireguard-ui, syncthing, caddy, portainer)
+   - **Alpine `alpine:3.21`**: for statically-compiled Go/Rust binaries and verified release artifacts (wireguard-ui, syncthing, caddy, portainer, vaultwarden)
    - See [Architecture Decisions](README.md#architecture-decisions) for rationale
    - Apply `shared/hardening.sh` for security hardening
    - Apply `shared/strip.sh` as the final build step (after user creation)
@@ -112,7 +115,7 @@ git push origin hardening
 
 # 5. Open a PR: hardening → main
 #    → CI Gate runs again on the PR
-#    → CODEOWNER review required
+#    → Required reviewer approval
 #    → Squash merge when approved
 #    → Review Renovate PRs to `hardening` the same way before promoting them to `main`
 
@@ -155,5 +158,5 @@ All CI/CD changes must follow these rules:
 4. Trivy scan must report 0 CRITICAL/HIGH vulnerabilities
 5. Smoke tests must pass (container starts, healthcheck responds)
 6. Update relevant documentation (README, SECURITY, CONTRIBUTING)
-7. One approval required from a CODEOWNER
+7. One approval required by branch protection rules
 8. Squash merge — keep `main` history clean

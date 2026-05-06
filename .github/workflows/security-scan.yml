@@ -25,8 +25,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        image: [sonarr, radarr, transmission, prowlarr, plex, dashy, wireguard-ui, syncthing, caddy, portainer]
+        image: [sonarr, radarr, transmission, prowlarr, plex, dashy, wireguard-ui, syncthing, caddy, portainer, vaultwarden]
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
       - name: Pull latest image
         id: pull
         run: |

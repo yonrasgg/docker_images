@@ -66,6 +66,11 @@
 !portainer/Dockerfile
 !portainer/entrypoint.sh
 
+# Vaultwarden
+!vaultwarden/
+!vaultwarden/Dockerfile
+!vaultwarden/entrypoint.sh
+
 # ---- DENY: Anything that sneaks into allowed directories ----
 # Even inside allowed dirs, block sensitive patterns as defense-in-depth
 **/.env

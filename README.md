@@ -24,6 +24,7 @@ Every image is built with multi-stage builds, runs as a non-root user, is scanne
 | **syncthing** | 8384 | Continuous file synchronization | `docker pull ghcr.io/yonrasgg/syncthing:latest` |
 | **caddy** | 80, 443 | Reverse proxy with automatic HTTPS | `docker pull ghcr.io/yonrasgg/caddy:latest` |
 | **portainer** | 9000, 9443 | Container management UI for Docker environments | `docker pull ghcr.io/yonrasgg/portainer:latest` |
+| **vaultwarden** | 80 | Bitwarden-compatible password manager server | `docker pull ghcr.io/yonrasgg/vaultwarden:latest` |
 
 ## Supply Chain Security
 
@@ -123,6 +124,9 @@ For the full media stack with TLS, VPN access, and nftables firewall, see the [H
 | `DOCKER_GID` | *(empty)* | Host Docker group ID for `/var/run/docker.sock` access (portainer only) |
 | `PLEX_CLAIM` | *(empty)* | Plex claim token (plex image only, first run) |
 
+Portainer note:
+When mounting `/var/run/docker.sock`, set `DOCKER_GID` to the host socket group ID so the non-root `media` user can access Docker (example: `-e DOCKER_GID=$(stat -c '%g' /var/run/docker.sock)`).
+
 ## CI/CD Pipeline
 
 Images reach `ghcr.io` only after passing every gate. Development happens on the `hardening` branch; `main` is the release branch.
@@ -141,7 +145,7 @@ hardening branch ──► CI Gate workflow
                  NO → fix on hardening, re-run
                  YES ↓
                       │
-PR: hardening → main ─► CODEOWNER approval required
+PR: hardening → main ─► required reviewer approval
                       │
                       ▼
 main branch ──────► Publish workflow
@@ -154,7 +158,7 @@ main branch ──────► Publish workflow
                       └─ SLSA provenance (BuildKit)
 
 Weekly cron ────────► Rebuild all images (picks up base image patches)
-Nightly cron ───────► Grype scan (published images, fix-available HIGH/CRITICAL CVEs)
+Nightly cron ───────► Grype scan (published images, actionable HIGH/CRITICAL CVEs)
 On-demand ──────────► OpenSSF Scorecard assessment
 ```
 
@@ -162,7 +166,7 @@ On-demand ──────────► OpenSSF Scorecard assessment
 |----------|---------|---------|
 | **CI Gate** | Push to `hardening`, PR to `hardening` or `main` | Validate: lint, build, scan, smoke test |
 | **Publish** | Push to `main`, weekly cron | Build, sign, attest, push to registry |
-| **Nightly Scan** | Daily cron | Grype scan of published images for new HIGH/CRITICAL CVEs with fixes available |
+| **Nightly Scan** | Daily cron | Grype scan of published images; uploads actionable error-level HIGH/CRITICAL findings |
 | **Scorecard** | Push to `main`, weekly cron | OpenSSF supply chain health assessment |
 
 - **Gate**: `✅ All CI Gates Passed` is required by branch protection before merge
@@ -214,6 +218,15 @@ Portainer uses `alpine:3.21` because:
 - The image verifies upstream SHA256 checksums before shipping binaries to runtime
 - Alpine keeps the final attack surface small while preserving Portainer functionality
 
+### Alpine for Vaultwarden
+
+Vaultwarden uses `alpine:3.21` because:
+
+- Vaultwarden is compiled from the upstream tagged source with a MUSL Rust toolchain, producing a self-contained runtime binary
+- The web vault frontend is copied from the official `vaultwarden/web-vault` image pinned by immutable digest
+- Runtime dependencies are minimal (`su-exec`, `tini`, `tzdata`, `ca-certificates`, `openssl`)
+- Alpine keeps the runtime footprint and attack surface small while preserving full Vaultwarden functionality
+
 Both base OS families share identical hardening and stripping scripts (`shared/hardening.sh`, `shared/strip.sh`) with automatic OS detection.
 
 ## Repository Structure
@@ -229,6 +242,7 @@ Both base OS families share identical hardening and stripping scripts (`shared/h
 ├── syncthing/       # Syncthing Dockerfile + entrypoint (Alpine)
 ├── caddy/           # Caddy reverse proxy Dockerfile + entrypoint (Alpine)
 ├── portainer/       # Portainer Dockerfile + entrypoint (Alpine)
+├── vaultwarden/     # Vaultwarden Dockerfile + entrypoint (Alpine)
 ├── shared/          # Common hardening + stripping scripts
 │   ├── hardening.sh # SUID/SGID removal, cleanup, crontab purge
 │   └── strip.sh     # Package manager + tool removal (Debian + Alpine)
@@ -236,7 +250,7 @@ Both base OS families share identical hardening and stripping scripts (`shared/h
 ├── renovate.json5   # Renovate config for hardening-targeted update PRs
 ├── SECURITY.md      # Security policy, vulnerability reporting, verification
 ├── CONTRIBUTING.md  # Development and contribution guide
-└── CODEOWNERS       # Code ownership and review requirements
+└── .trivyignore     # Accepted CVE risks with documented rationale
 ```
 
 ### Legacy Images
