@@ -5,6 +5,14 @@ PUID=${PUID:-1000}
 PGID=${PGID:-1000}
 UMASK=${UMASK:-0022}
 
+# --- Validate numeric IDs ---
+case "${PUID}${PGID}" in
+    *[!0-9]*)
+        echo "ERROR: PUID and PGID must be numeric." >&2
+        exit 1
+        ;;
+esac
+
 # --- Adjust user/group IDs ---
 if [ "$PGID" != "1000" ]; then
     sed -i "s/^media:x:1000:/media:x:${PGID}:/" /etc/group
